@@ -1,0 +1,16 @@
+application: plurk-oldgod
+version: php-master
+runtime: php55
+api_version: 1
+
+handlers:
+
+- url: /getNewPlurks
+  script: app/getNewPlurks.php
+
+- url: /processPlurk
+  script: app/processPlurk.php
+
+- url: /addNewFriend
+  script: app/addNewFriend.php
+
