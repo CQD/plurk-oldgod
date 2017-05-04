@@ -236,16 +236,16 @@
         },
         {
             "name": "qlurk/qlurk",
-            "version": "0.1.1",
+            "version": "0.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CQD/qlurk.git",
-                "reference": "350b0d6ea53d17eb24a1f2a4fcafc4943141cfe2"
+                "reference": "467fdd26d25594ebda8b0cdb4a28978ade2f3b0e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CQD/qlurk/zipball/350b0d6ea53d17eb24a1f2a4fcafc4943141cfe2",
-                "reference": "350b0d6ea53d17eb24a1f2a4fcafc4943141cfe2",
+                "url": "https://api.github.com/repos/CQD/qlurk/zipball/467fdd26d25594ebda8b0cdb4a28978ade2f3b0e",
+                "reference": "467fdd26d25594ebda8b0cdb4a28978ade2f3b0e",
                 "shasum": ""
             },
             "require": {
@@ -272,7 +272,7 @@
                 "api",
                 "plurk"
             ],
-            "time": "2016-11-20T18:32:35+00:00"
+            "time": "2017-05-04T00:19:40+00:00"
         }
     ],
     "packages-dev": [],
