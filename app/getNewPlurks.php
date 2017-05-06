@@ -50,9 +50,14 @@ function run ()
         $qlurk->call('/APP/Timeline/mutePlurks', ['ids' => json_encode($ids)]);
 
         foreach ($plurks as $plurk) {
+            $contentRaw = trim($plurk['content_raw']);
+            if (0 !== strpos($contentRaw, '老神') && 0 !== strpos(strtolower($contentRaw), '@oldgod')) {
+                continue;
+            }
+
             $task = new PushTask(
                 '/processPlurk',
-                ['id' => $plurk['plurk_id'], 'contentRaw' => $plurk['content_raw']]
+                ['id' => $plurk['plurk_id'], 'contentRaw' => $contentRaw]
             );
             $task->add('process-plurk');
         }
