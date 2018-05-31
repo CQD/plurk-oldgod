@@ -1,5 +1,3 @@
-application: plurk-oldgod
-version: php-master
 runtime: php55
 api_version: 1
 
