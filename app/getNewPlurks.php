@@ -47,11 +47,13 @@ function run ()
         $mc->set('latestPlurkTime', $latestPlurkTime);
 
         $ids = array_column($plurks, 'plurk_id');
-        $qlurk->call('/APP/Timeline/mutePlurks', ['ids' => json_encode($ids)]);
+        $toBeMutedIds = [];
 
         foreach ($plurks as $plurk) {
             $contentRaw = trim($plurk['content_raw']);
+
             if (0 !== strpos($contentRaw, '老神') && 0 !== strpos(strtolower($contentRaw), '@oldgod')) {
+                $toBeMutedIds[] = $plurk['plurk_id'];
                 continue;
             }
 
@@ -61,10 +63,13 @@ function run ()
             );
             $task->add('process-plurk');
         }
+
+        $qlurk->call('/APP/Timeline/mutePlurks', ['ids' => json_encode($toBeMutedIds)]);
     }
 
     return [
         'plurks' => $ids,
+        'mutedPlurks' => $toBeMutedIds,
         'oldLatestPlurkTime' => $oldLatestPlurkTime,
         'offset' => $offset,
         'latestPlurkTime' => date('Y-m-d H:i:s', $latestPlurkTime)
