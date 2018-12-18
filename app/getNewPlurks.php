@@ -4,6 +4,8 @@ use google\appengine\api\taskqueue\PushTask;
 $startTime = microtime(true);
 include __DIR__ . '/_init.php';
 
+date_default_timezone_set('UTC');
+
 try {
     $result = array_merge(['result' => true], run());
 } catch (\Exception $e) {
@@ -32,7 +34,6 @@ function run ()
 
     $qlurk = $GLOBALS['qlurk'];
 
-    date_default_timezone_set('UTC');
     $offset = date("c", $latestPlurkTime);
     $plurks = $qlurk->call('/APP/Polling/getPlurks', ['offset' => $offset, 'minimal_data' => 1]);
 
