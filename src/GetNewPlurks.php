@@ -8,6 +8,15 @@ class GetNewPlurks
     {
         $this->replyNewPlurks();
         $this->replyOldPlurks();
+        sleep(15);
+        $this->replyNewPlurks();
+        $this->replyOldPlurks();
+        sleep(15);
+        $this->replyNewPlurks();
+        $this->replyOldPlurks();
+        sleep(15);
+        $this->replyNewPlurks();
+        $this->replyOldPlurks();
     }
 
     protected function replyNewPlurks()
