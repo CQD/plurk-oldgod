@@ -94,7 +94,7 @@ class GetNewPlurks
                     continue;
                 }
 
-                $content = $response['content'];
+                $content = strtolower($response['content']);
                 if(0 === strpos($content, '老神') || 0 === strpos($content, '@oldgod')){
                     $this->respond($response['plurk_id'], $content);
                 }
