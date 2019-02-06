@@ -1,0 +1,8 @@
+cron:
+- description: 定時抓新噗
+  url: /getNewPlurks
+  schedule: every 1 minutes
+
+- description: 自動加好友
+  url: /addAllAsFriend
+  schedule: every 1 minutes

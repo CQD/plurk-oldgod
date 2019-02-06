@@ -1,0 +1,10 @@
+{
+    "autoload": {
+        "psr-4": {
+            "Q\\OldGod\\": "src/"
+        }
+    },
+    "require": {
+        "qlurk/qlurk": "^0.2.2"
+    }
+}
