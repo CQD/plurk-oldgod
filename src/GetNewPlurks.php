@@ -55,7 +55,7 @@ class GetNewPlurks
     {
         global $qlurk;
 
-        $plurks = $qlurk->call('/APP/Timeline/getUnreadPlurks');
+        $plurks = $qlurk->call('/APP/Timeline/getUnreadPlurks', ['filter' => 'responded']);
         $plurks = $plurks['plurks'] ?? [];
 
         // 排除已經被消音的噗
