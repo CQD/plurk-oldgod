@@ -78,6 +78,11 @@ class GetNewPlurks
             return $p['response_count'] > $p['responses_seen'];
         });
 
+        // 沒有要回應噗的就不做後面的邏輯了
+        if (!$plurks) {
+            return;
+        }
+
         // 把噗標示為已讀
         // 先標已讀再回應是為了降低使用者連續回應的時候可能會有 race condition
         // 導致太快貼的回應不會被回到
