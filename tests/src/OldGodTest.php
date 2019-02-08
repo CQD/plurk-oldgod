@@ -9,7 +9,7 @@ use Q\OldGod\OldGod;
 class OldGodTest extends TestCase
 {
     /**
-     * @testdox 回應吉凶
+     * @testdox 問吉凶
      * @dataProvider lucknessProvider
      */
     public function testAskLuckness($question)
