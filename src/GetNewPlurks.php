@@ -148,27 +148,44 @@ class GetNewPlurks
 function ask($contentRaw)
 {
     $rslt = [
-        "大吉", "大吉",
-        "吉", "吉", "吉",
-        "末小吉",
-        "平",
-        "兇", "兇",
-        "大兇",
+        '大吉' => 6,
+        '吉' => 7,
+        '末小吉' => 3,
+        '平' => 5,
+        '兇' => 3,
+        '大凶' => 1,
+        '嘿嘿' => 1,
     ];
 
     $act = [
-        "查生死簿",
-        "觀天象", "觀天象", "觀天象", "觀天象",
-        "卜一卦", "卜一卦", "卜一卦",
-        "通靈感", "通靈感",
-        "掐指一算", "掐指一算",
+        "隨便說" => 1,
+        "問路人" => 1,
+        "查生死簿" => 2,
+        "觀天象" => 8,
+        "卜一卦" => 6,
+        "通靈感" => 4,
+        "掐指一算" => 4,
     ];
 
     return [sprintf(
         "吾%s，以之為「%s」",
-        $act[array_rand($act)],
-        $rslt[array_rand($rslt)]
+        weighted_rand($act),
+        weighted_rand($rslt)
     )];
+}
+
+function weighted_rand(array $ary)
+{
+    $sum = array_sum($ary);
+    $i = random_int(0, $sum - 1);
+
+    foreach ($ary as $key => $weight) {
+        $i -= $weight;
+        if ($i < 0) {
+            break;
+        }
+    }
+    return $key;
 }
 
 function oracle($contentRaw)
