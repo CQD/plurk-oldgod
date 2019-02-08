@@ -13,7 +13,7 @@ class GetNewPlurks
             $endTime = microtime(true);
 
             $execTime = $endTime - $startTime;
-            $sleepTime = (int) (15 - $execTime);
+            $sleepTime = max(0, (int) (15 - $execTime));
             qlog(LOG_DEBUG, sprintf("execTime: %5.3s, sleepTime: %s", $execTime, $sleepTime));
 
             if ($i < 3) {
