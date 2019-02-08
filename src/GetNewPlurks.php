@@ -6,17 +6,16 @@ class GetNewPlurks
 {
     public function run()
     {
-        $this->replyNewPlurks();
-        $this->replyOldPlurks();
-        sleep(15);
-        $this->replyNewPlurks();
-        $this->replyOldPlurks();
-        sleep(15);
-        $this->replyNewPlurks();
-        $this->replyOldPlurks();
-        sleep(15);
-        $this->replyNewPlurks();
-        $this->replyOldPlurks();
+        for ($i = 0; $i < 4; $i++) {
+            $startTime = microtime(true);
+            $this->replyNewPlurks();
+            $this->replyOldPlurks();
+            $endTime = microtime(true);
+
+            if ($i < 3) {
+                sleep(15 - ($endTime - $startTime));
+            }
+        }
     }
 
     protected function replyNewPlurks()
