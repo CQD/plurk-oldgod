@@ -2,8 +2,12 @@
 
 namespace Q\OldGod;
 
+use Q\OldGod\OldGod;
+
 class GetNewPlurks
 {
+    public $interval = 15;
+
     public function run()
     {
         for ($i = 0; $i < 4; $i++) {
@@ -13,7 +17,7 @@ class GetNewPlurks
             $endTime = microtime(true);
 
             $execTime = $endTime - $startTime;
-            $sleepTime = max(0, (int) (15 - $execTime));
+            $sleepTime = max(0, (int) ($this->interval - $execTime));
             qlog(LOG_DEBUG, sprintf("execTime: %5.3s, sleepTime: %s", $execTime, $sleepTime));
 
             if ($i < 3) {
@@ -86,7 +90,7 @@ class GetNewPlurks
         // 把噗標示為已讀
         // 先標已讀再回應是為了降低使用者連續回應的時候可能會有 race condition
         // 導致太快貼的回應不會被回到
-        $ids = array_map(function($p){return $p['plurk_id'];}, $plurks);
+        $ids = array_values(array_map(function($p){return $p['plurk_id'];}, $plurks));
 
         qlog(LOG_DEBUG, "標已讀 " . json_encode($ids));
         $qlurk->call('/APP/Timeline/markAsRead', ['ids' => json_encode($ids), 'note_position' => true]);
@@ -130,7 +134,7 @@ class GetNewPlurks
             $qlurk->call('/APP/Timeline/mutePlurks', ['ids' => json_encode($plurkIdsToMute)]);
         }
 
-        return $plurkIdsToMute;
+        return array_values($plurkIdsToMute);
     }
 
     protected function respond(int $plurkId, string $msg)
