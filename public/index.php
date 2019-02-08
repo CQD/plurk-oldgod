@@ -23,3 +23,13 @@ if (is_callable($controller)) {
     http_response_code(404);
 }
 
+///////////////////////////////////////////////////////////////////
+
+function qlog($level, $msg)
+{
+    if (defined('STDERR')) {
+        fputs(STDERR, $msg . "\n");
+    } else {
+        syslog($level, $msg);
+    }
+}

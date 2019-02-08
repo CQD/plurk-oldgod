@@ -79,7 +79,7 @@ class GetNewPlurks
         // 導致太快貼的回應不會被回到
         $ids = array_map(function($p){return $p['plurk_id'];}, $plurks);
 
-        syslog(LOG_DEBUG, "標已讀 " . json_encode($ids));
+        qlog(LOG_DEBUG, "標已讀 " . json_encode($ids));
         $qlurk->call('/APP/Timeline/markAsRead', ['ids' => json_encode($ids), 'note_position' => true]);
 
         // 未讀的訊息有召喚老神的話，回應之
@@ -117,7 +117,7 @@ class GetNewPlurks
         $plurkIdsToMute = array_map(function($p){return $p['plurk_id'];}, $plurksToMute);
 
         if ($plurkIdsToMute) {
-            syslog(LOG_DEBUG, "消音 " . json_encode($plurkIdsToMute));
+            qlog(LOG_DEBUG, "消音 " . json_encode($plurkIdsToMute));
             $qlurk->call('/APP/Timeline/mutePlurks', ['ids' => json_encode($plurkIdsToMute)]);
         }
 
@@ -135,7 +135,7 @@ class GetNewPlurks
 
         $replies = $action($msg);
         foreach ($replies as $reply) {
-            syslog(LOG_DEBUG, "回覆 {$plurkId}");
+            qlog(LOG_DEBUG, "回覆 {$plurkId}");
             $qlurk->call('/APP/Responses/responseAdd', ['plurk_id' => $plurkId, 'content' => $reply, 'qualifier' => ':']);
         }
     }
