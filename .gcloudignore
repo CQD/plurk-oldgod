@@ -1,4 +1,5 @@
 .gcloudignore
 .git
 .gitignore
+*.cache
 vendor/
