@@ -10,18 +10,21 @@ installNoDev:
 installWithDev:
 	composer install -o
 
-deploy: installNoDev
+deploy:
 	@$(MAKE) real-deploy OPTIONS="--promote --stop-previous-version $(OPTIONS)"
 
-soft-deploy: installNoDev
+soft-deploy:
 	@$(MAKE) real-deploy OPTIONS="--no-promote --no-stop-previous-version $(OPTIONS)"
 
-real-deploy:
+real-deploy: installNoDev config.php
 	gcloud app deploy -v $(VERSION)  --project=$(PROJECT_ID) $(OPTIONS)
 	@$(MAKE) post-deploy
 
 post-deploy:
 	@echo "\033[1;33mDeploy done.\033[m"
+
+config.php:
+	@echo "\033[1;31m$@ not found! Stopping!\033[m" && exit -1
 
 server: installWithDev
 	php -S localhost:8080 -t public/
