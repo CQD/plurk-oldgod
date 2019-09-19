@@ -1,0 +1,17 @@
+#!/usr/bin/env php
+<?php
+
+use Q\OldGod\OldGod;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$question = implode(' ', array_slice($argv, 1));
+
+if (!$question) {
+    fputs(STDERR, "請輸入問題\n");
+    exit;
+}
+
+$oldGod = new OldGod($question);
+
+echo implode("\n", $oldGod->ask($question)), "\n";
