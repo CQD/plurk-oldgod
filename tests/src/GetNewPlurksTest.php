@@ -8,21 +8,14 @@ use Q\OldGod\GetNewPlurks;
  */
 class GetNewPlurksTest extends TestCase
 {
-    public function setUp(): void
-    {
-        global $qlurk;
-
-        $qlurk = new DummyQlurk();
-    }
-
     /**
      * @testdox 跑一次資料更新流程
      */
     public function testRun()
     {
-        global $qlurk;
+        $qlurk = new DummyQlurk();
 
-        $a = new GetNewPlurks();
+        $a = new GetNewPlurks($qlurk);
         $a->interval = 0;
 
         $qlurk->prepare(['plurks'=>[

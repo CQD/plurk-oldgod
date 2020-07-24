@@ -18,7 +18,8 @@ $controller = $map[$path] ?? null;
 if (is_callable($controller)) {
     $controller();
 } elseif (class_exists($clazz = "\\Q\\OldGod\\{$controller}")) {
-   (new $clazz())->run();
+    $controller = new $clazz($qlurk);
+    $controller->run();
 } else {
     http_response_code(404);
 }

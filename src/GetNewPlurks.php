@@ -7,6 +7,12 @@ use Q\OldGod\OldGod;
 class GetNewPlurks
 {
     public $interval = 15;
+    private $qlurk;
+
+    public function __construct($qlurk)
+    {
+        $this->qlurk = $qlurk;
+    }
 
     public function run()
     {
@@ -28,9 +34,7 @@ class GetNewPlurks
 
     protected function replyNewPlurks()
     {
-        global $qlurk;
-
-        $plurks = $qlurk->call('/APP/Timeline/getPlurks', ['minimal_data' => 0]);
+        $plurks = $this->qlurk->call('/APP/Timeline/getPlurks', ['minimal_data' => 0]);
         $plurks = $plurks['plurks'] ?? [];
 
         // 排除已經被消音的噗
@@ -60,9 +64,7 @@ class GetNewPlurks
 
     protected function replyOldPlurks()
     {
-        global $qlurk;
-
-        $plurks = $qlurk->call('/APP/Timeline/getUnreadPlurks', ['filter' => 'responded']);
+        $plurks = $this->qlurk->call('/APP/Timeline/getUnreadPlurks', ['filter' => 'responded']);
         $plurks = $plurks['plurks'] ?? [];
 
         // 排除已經被消音的噗
@@ -93,11 +95,11 @@ class GetNewPlurks
         $ids = array_values(array_map(function($p){return $p['plurk_id'];}, $plurks));
 
         qlog(LOG_DEBUG, "標已讀 " . json_encode($ids));
-        $qlurk->call('/APP/Timeline/markAsRead', ['ids' => json_encode($ids), 'note_position' => true]);
+        $this->qlurk->call('/APP/Timeline/markAsRead', ['ids' => json_encode($ids), 'note_position' => true]);
 
         // 未讀的訊息有召喚老神的話，回應之
         foreach ($plurks as $p) {
-            $r = $qlurk->call('/APP/Responses/get', ['plurk_id' => $p['plurk_id'], 'minimal_data' => true]);
+            $r = $this->qlurk->call('/APP/Responses/get', ['plurk_id' => $p['plurk_id'], 'minimal_data' => true]);
 
             $seenCnt = $p['responses_seen'];
 
@@ -120,8 +122,6 @@ class GetNewPlurks
      */
     protected function muteNonSummoningPlurks(array $plurks): array
     {
-        global $qlurk;
-
         $plurksToMute = array_filter($plurks, function($p){
             $content = strtolower($p['content_raw']);
             return (0 !== strpos($content, '老神')) && (0 !== strpos($content, '@oldgod'));
@@ -131,7 +131,7 @@ class GetNewPlurks
 
         if ($plurkIdsToMute) {
             qlog(LOG_DEBUG, "消音 " . json_encode($plurkIdsToMute));
-            $qlurk->call('/APP/Timeline/mutePlurks', ['ids' => json_encode($plurkIdsToMute)]);
+            $this->qlurk->call('/APP/Timeline/mutePlurks', ['ids' => json_encode($plurkIdsToMute)]);
         }
 
         return array_values($plurkIdsToMute);
@@ -139,14 +139,12 @@ class GetNewPlurks
 
     protected function respond(int $plurkId, string $msg)
     {
-        global $qlurk;
-
         $oldgod = new OldGod();
 
         $replies = $oldgod->ask($msg);
         foreach ($replies as $reply) {
             qlog(LOG_DEBUG, "回覆 {$plurkId}");
-            $qlurk->call('/APP/Responses/responseAdd', ['plurk_id' => $plurkId, 'content' => $reply, 'qualifier' => ':']);
+            $this->qlurk->call('/APP/Responses/responseAdd', ['plurk_id' => $plurkId, 'content' => $reply, 'qualifier' => ':']);
         }
     }
 }
