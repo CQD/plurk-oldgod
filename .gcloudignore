@@ -1,5 +1,6 @@
 .gcloudignore
 .git
 .gitignore
+config.example.php
 *.cache
 vendor/

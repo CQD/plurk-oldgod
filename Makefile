@@ -24,7 +24,7 @@ post-deploy:
 	@echo "\033[1;33mDeploy done.\033[m"
 
 config.php:
-	@echo "\033[1;31m$@ not found! Stopping!\033[m" && exit -1
+	@echo "\033[1;31m沒有設定 $@ ，無法 deploy，請參考 config.example.php 設定 config.php!\033[m" && exit -1
 
 server: installWithDev
 	php -S localhost:8080 -t public/
