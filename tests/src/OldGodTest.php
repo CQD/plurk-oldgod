@@ -21,7 +21,7 @@ class OldGodTest extends TestCase
 
             $this->assertIsArray($rslt);
             $this->assertSame(1, count($rslt));
-            $this->assertRegExp('/吾..+，以之為「[^」]*[吉兇平嘿][^」]*」/', $rslt[0]);
+            $this->assertRegExp('/吾..+，以之為「[^」]*[吉兇平嘿香][^」]*」/', $rslt[0]);
         }
     }
 
