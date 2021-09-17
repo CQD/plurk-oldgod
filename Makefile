@@ -30,4 +30,4 @@ server: installWithDev
 	php -S localhost:8080 -t public/
 
 test: installWithDev
-	vendor/bin/phpunit --testdox $(OPTIONS)
+	vendor/bin/phpunit --testdox tests/ $(OPTIONS)
