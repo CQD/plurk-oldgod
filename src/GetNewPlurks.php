@@ -128,6 +128,7 @@ class GetNewPlurks
         });
 
         $plurkIdsToMute = array_map(function($p){return $p['plurk_id'];}, $plurksToMute);
+        $plurkIdsToMute = array_values($plurkIdsToMute);
 
         if ($plurkIdsToMute) {
             qlog(LOG_DEBUG, "消音 " . json_encode($plurkIdsToMute));
