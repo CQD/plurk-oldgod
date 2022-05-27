@@ -37,11 +37,6 @@ class GetNewPlurks
         $plurks = $this->qlurk->call('/APP/Timeline/getPlurks', ['minimal_data' => 0]);
         $plurks = $plurks['plurks'] ?? [];
 
-        // 排除已經被消音的噗
-        $plurks = array_filter($plurks, function($p){
-            return 2 !== (int) ($p['is_unread'] ?? 0);
-        });
-
         // 把沒有呼喚老神的噗通通消音
         // 然後把這些噗排除掉
         $mutedIds = $this->muteNonSummoningPlurks($plurks);
@@ -66,18 +61,6 @@ class GetNewPlurks
     {
         $plurks = $this->qlurk->call('/APP/Timeline/getUnreadPlurks', ['filter' => 'responded']);
         $plurks = $plurks['plurks'] ?? [];
-
-        // 排除已經被消音的噗
-        $plurks = array_filter($plurks, function($p){
-            return 2 !== (int) ($p['is_unread'] ?? 0);
-        });
-
-        // 消音並排除掉沒有招喚老神的噗
-        $mutedIds = $this->muteNonSummoningPlurks($plurks);
-        $plurks = array_filter($plurks, function($p) use ($mutedIds){
-            return !in_array($p['plurk_id'], $mutedIds);
-        });
-
 
         // 排除掉回應都讀過的
         $plurks = array_filter($plurks, function($p) {
@@ -122,20 +105,29 @@ class GetNewPlurks
      */
     protected function muteNonSummoningPlurks(array $plurks): array
     {
-        $plurksToMute = array_filter($plurks, function($p){
+        // 有呼喊老神的不放進排除清單
+        // 已經被消音但有呼叫老神的也應該被放進排除清單
+        $plurksShouldMute = array_filter($plurks, function($p){
             $content = strtolower($p['content_raw']);
-            return (0 !== strpos($content, '老神')) && (0 !== strpos($content, '@oldgod'));
+            if (2 === $p['is_unread']) return true;
+            if (0 === strpos($content, '老神')) return false;
+            if (0 === strpos($content, '@oldgod')) return false;
+            return true;
         });
+        $plurksIdsShouldMute = array_column($plurksShouldMute, 'plurk_id');
 
-        $plurkIdsToMute = array_map(function($p){return $p['plurk_id'];}, $plurksToMute);
-        $plurkIdsToMute = array_values($plurkIdsToMute);
+        // 排除已經消音過的
+        $plurksToMute = array_filter($plurksShouldMute, function($p){
+            return 2 !== (int) ($p['is_unread'] ?? 0);
+        });
+        $plurkIdsToMute = array_column($plurksToMute, 'plurk_id');
 
         if ($plurkIdsToMute) {
             qlog(LOG_DEBUG, "消音 " . json_encode($plurkIdsToMute));
             $this->qlurk->call('/APP/Timeline/mutePlurks', ['ids' => json_encode($plurkIdsToMute)]);
         }
 
-        return array_values($plurkIdsToMute);
+        return array_values($plurksIdsShouldMute);
     }
 
     protected function respond(int $plurkId, string $msg)
