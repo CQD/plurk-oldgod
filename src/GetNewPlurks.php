@@ -16,6 +16,12 @@ class GetNewPlurks
 
     public function run()
     {
+        if (!$this->canRunCron()) {
+            http_response_code(403);
+            echo "You should not pass.\n";
+            return;
+        }
+
         for ($i = 0; $i < 4; $i++) {
             $startTime = microtime(true);
             $this->replyNewPlurks();
@@ -30,6 +36,22 @@ class GetNewPlurks
                 sleep($sleepTime);
             }
         }
+    }
+
+    protected function canRunCron()
+    {
+        $headers = getallheaders() ?: [];
+        if (isset($headers['X-Appengine-Cron'])) {
+            return true;
+        }
+
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $host = explode(':', $host)[0];
+        if (in_array($host, ['localhost', '127.0.0.1'])) {
+            return true;
+        }
+
+        return false;
     }
 
     protected function replyNewPlurks()
