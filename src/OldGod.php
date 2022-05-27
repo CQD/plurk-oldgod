@@ -26,6 +26,8 @@ class OldGod
 
     protected function luckness(string $question): array
     {
+        $question = strtoupper($question);
+
         $rslt = [
             '大吉' => 60,
             '吉' => 70,
@@ -46,6 +48,10 @@ class OldGod
             "通靈感" => 4,
             "掐指一算" => 4,
         ];
+
+        if (strpos($question, "QQ") !== false) {
+            $rslt['QQ'] = 57;
+        }
 
         return [sprintf(
             "吾%s，以之為「%s」",
