@@ -136,10 +136,11 @@ let q = document.getElementById('q')
 let ask = document.getElementById('ask')
 let answer = document.getElementById('answer')
 
-let last_question = false
+let last_ask_time = 0
 function ask_oldgod() {
+    const now = new Date()
     const question = q.value
-    if (!question || last_question == question) {
+    if (!question || now - last_ask_time < 300) {
         return
     }
     fetch(`/?q=${question}`)
@@ -171,7 +172,7 @@ function ask_oldgod() {
         answer.style.display = "block"
     })
 
-    last_question = question
+    last_ask_time = now
 }
 
 q.onchange = ask_oldgod
