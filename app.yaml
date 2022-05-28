@@ -2,6 +2,10 @@ runtime: php81
 
 handlers:
 
+- url: /logo\.png
+  static_files: public/logo.png
+  upload: public/logo\.png
+
 - url: /.*
   script: auto
   secure: always
