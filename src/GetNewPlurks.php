@@ -22,19 +22,23 @@ class GetNewPlurks
             return;
         }
 
-        for ($i = 0; $i < 4; $i++) {
-            $startTime = microtime(true);
+        for ($offset = 0; $offset < 60; $offset += $this->interval) {
+            $pid = pcntl_fork();
+            if ($pid == -1) {
+                qlog(LOG_ERR, "pcntl_fork 失敗！");
+                http_response_code(500);
+                return;
+            }
+            if ($pid > 0) {
+                continue;
+            }
+
+            sleep($offset);
+            qlog(LOG_ERR, "啟動讀噗工作");
             $this->replyNewPlurks();
             $this->replyOldPlurks();
-            $endTime = microtime(true);
-
-            $execTime = $endTime - $startTime;
-            $sleepTime = max(0, (int) ($this->interval - $execTime));
-            qlog(LOG_DEBUG, sprintf("execTime: %5.3s, sleepTime: %s", $execTime, $sleepTime));
-
-            if ($i < 3) {
-                sleep($sleepTime);
-            }
+            qlog(LOG_ERR, "完成讀噗工作");
+            exit;
         }
     }
 

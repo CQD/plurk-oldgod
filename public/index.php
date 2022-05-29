@@ -44,6 +44,8 @@ function serve_static_file($path)
 
 function qlog($level, $msg)
 {
+    $pid = getmypid();
+    $msg = "[PID {$pid}] {$msg}";
     if (defined('STDERR')) {
         fputs(STDERR, $msg . "\n");
     } else {
