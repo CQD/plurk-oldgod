@@ -2,7 +2,6 @@
 
 OPTIONS?=
 PROJECT_ID?='plurk-oldgod'
-VERSION?='php-master'
 
 deploy:
 	@$(MAKE) real-deploy OPTIONS="--promote --stop-previous-version $(OPTIONS)"
@@ -11,7 +10,7 @@ soft-deploy:
 	@$(MAKE) real-deploy OPTIONS="--no-promote --no-stop-previous-version $(OPTIONS)"
 
 real-deploy: config.php
-	gcloud app deploy -v $(VERSION)  --project=$(PROJECT_ID) $(OPTIONS)
+	gcloud app deploy --project=$(PROJECT_ID) $(OPTIONS)
 	@$(MAKE) post-deploy
 
 post-deploy:
