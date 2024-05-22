@@ -43,7 +43,7 @@ h1{
     margin:40px 0 30px;
 }
 
-#q, #answer{
+#q, #answers{
     border-radius: 15px;
     border:none;
     display: block;
@@ -66,11 +66,15 @@ h1{
     font-size: 30px;
     padding:3px 1em;
 }
-#answer{
+#answers{
     display: none;
     font-size:30px;
     background-color: #8B5822;
     padding:0.5em 1em;
+}
+.answer{
+    overflow: hidden;
+    transition: all 0.5s;
 }
 small{
     color:rgba(255,255,255,0.5)
@@ -111,7 +115,7 @@ hr{
 <h1>凡事問老神</h1>
 <input id="q" placeholder="請輸入問題" type="text">
 <button id="ask">老神老神請指引我</button>
-<div id="answer"></div>
+<div id="answers"></div>
 </section>
 
 <section id="desc">
@@ -136,7 +140,7 @@ hr{
 <script>
 let q = document.getElementById('q')
 let ask = document.getElementById('ask')
-let answer = document.getElementById('answer')
+let answer = document.getElementById('answers')
 
 let last_ask_time = 0
 function ask_oldgod() {
@@ -150,8 +154,12 @@ function ask_oldgod() {
         return res.json()
     })
     .then(data => {
+        const wrapper = document.createElement('div')
+        wrapper.classList.add('answer')
         const que = document.createElement('small')
         const ans = document.createElement('div')
+        wrapper.appendChild(que)
+        wrapper.appendChild(ans)
 
         let text = data.ans
         if (Array.isArray(text)) {
@@ -160,18 +168,22 @@ function ask_oldgod() {
 
         que.innerText = `問：${question}`
         ans.innerText = text
-        if (answer.children.length > 0) {
-            answer.prepend(document.createElement('hr'))
+        if (answers.children.length > 0) {
+            answers.prepend(document.createElement('hr'))
         }
 
         if (text.length > 30) {
-            ans.style.fontSize = '80%'
+            ans.style.fontSisze = '80%'
         }
         console.log(text.length)
 
-        answer.prepend(ans)
-        answer.prepend(que)
-        answer.style.display = "block"
+        answers.prepend(wrapper)
+        answers.style.display = "block"
+
+        const answer_height = wrapper.getBoundingClientRect().height
+        wrapper.style.height = 0
+        setTimeout(() => {wrapper.style.height = answer_height + 'px'}, 30)
+        setTimeout(() => {wrapper.style.height = 'auto'}, 1000)
     })
 
     last_ask_time = now
