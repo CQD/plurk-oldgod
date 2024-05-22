@@ -156,10 +156,49 @@ class GetNewPlurks
     {
         $oldgod = new OldGod();
 
+        if ($this->isSuspiciousMsg($msg)) {
+            qlog(LOG_DEBUG, "{$plurkId} 的內容可疑，不回應，並解除好友");
+            $plurk = $this->qlurk->call('/APP/Timeline/getPlurk', ['plurk_id' => $plurkId]);
+            $user_id = $plurk['plurk']['user_id'] ?? 0;
+            if ($user_id) {
+                qlog(LOG_DEBUG, "解除好友: {$user_id}");
+                $this->qlurk->call('/APP/FriendsFans/removeAsFriend', ['friend_id' => $user_id]);
+            } else {
+                $plurk_json = json_encode($plurk, JSON_UNESCAPED_UNICODE);
+                qlog(LOG_DEBUG, "找不到 id {$plurkId} 的 user_id，噗文資料： {$plurk_json}");
+            }
+            return;
+        }
+
         $replies = $oldgod->ask($msg);
         foreach ($replies as $reply) {
             qlog(LOG_DEBUG, "回覆 {$plurkId}");
             $this->qlurk->call('/APP/Responses/responseAdd', ['plurk_id' => $plurkId, 'content' => $reply, 'qualifier' => ':']);
         }
+    }
+
+    /**
+     * 檢查是不是訊息是不是來自可疑的機器人
+     */
+    protected function isSuspiciousMsg(string $msg) : bool
+    {
+        $active_words = [
+            "蛋糕獸",
+            "開村",
+            "人狼",
+            "倖存者日記",
+            "機器狼",
+            "召喚貓貓",
+        ];
+
+        $threshold = 3;
+        $count = 0;
+        foreach ($active_words as $word) {
+            if (false !== strpos($msg, $word)) {
+                $count++;
+            }
+        }
+
+        return $count >= $threshold;
     }
 }
