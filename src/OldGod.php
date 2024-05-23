@@ -2,6 +2,8 @@
 
 namespace Q\OldGod;
 
+use Q\OldGod\VertexAI;
+
 class OldGod
 {
 
@@ -19,25 +21,16 @@ class OldGod
 
         if (false !== strpos($question, '籤')) {
             return $this->oracle($question);
+        // } elseif (false !== strpos($question, '吉凶')) {
+        //     return $this->luckness($question, false);
         } else {
-            return $this->luckness($question);
+            return $this->luckness($question, true);
         }
     }
 
-    protected function luckness(string $question): array
+    protected function luckness(string $question, bool $with_llm_desc = false): array
     {
         $question = strtoupper($question);
-
-        $rslt = [
-            '大吉' => 60,
-            '吉' => 70,
-            '末小吉' => 30,
-            '平' => 50,
-            '兇' => 30,
-            '大凶' => 10,
-            '嘿嘿' => 10,
-            '真香' => 5,
-        ];
 
         $act = [
             "隨便說" => 1,
@@ -54,15 +47,104 @@ class OldGod
             "觀天象" => 11,
         ];
 
+        $luckness = $this->_luckness($question);
+
+        $basic_answer = sprintf(
+            "吾%s，以之為「%s」",
+            $this->weighted_rand($act),
+            $luckness,
+        );
+
+        $desc = $with_llm_desc ? $this->_llm_desc($question, $luckness) : "";
+
+        $results = [$basic_answer, $desc];
+        $results = array_filter($results);
+        return $results;
+    }
+
+    protected function _luckness(string $question): string
+    {
+        $question = strtoupper($question);
+
+        $rslt = [
+            '大吉' => 60,
+            '吉' => 70,
+            '末小吉' => 30,
+            '平' => 50,
+            '兇' => 30,
+            '大凶' => 10,
+            '嘿嘿' => 10,
+            '真香' => 5,
+        ];
+
         if (strpos($question, "QQ") !== false) {
             $rslt['QQ'] = 57;
         }
 
-        return [sprintf(
-            "吾%s，以之為「%s」",
-            $this->weighted_rand($act),
-            $this->weighted_rand($rslt)
-        )];
+        return $this->weighted_rand($rslt);
+    }
+
+    protected function _llm_desc(string $question, string $luckness): string
+    {
+        $fallbacks = [
+            '笑而不答' => 10,
+            '自己想想' => 10,
+            '嗯...嗯' => 10,
+            '覺得該說些什麼但想想還是別說好了' => 5,
+            '不可瑟瑟' => 2,
+        ];
+
+        try {
+            return $this->__llm_desc($question, $luckness);
+        } catch (\Throwable $e) {
+            qlog(LOG_ERR, "Error 1: " . $e->getMessage());
+            try {
+                return $this->__llm_desc($question, $luckness);
+            }
+            catch (\Throwable $e) {
+                qlog(LOG_ERR, "Error 2: " . $e->getMessage());
+                return sprintf("批：%s。", $this->weighted_rand($fallbacks));
+            }
+        }
+    }
+
+    protected function __llm_desc(string $question, string $luckness): string
+    {
+        $prompt_question = str_replace(["[/question]", "\n"], '', $question);
+
+        if ("平" === $luckness) {
+            $luckness = "不好不壞";
+        }
+
+        $prompt = <<< PROMPT
+你是「老神」，為子民占卜吉凶
+
+子民問：
+
+[question]
+{$prompt_question}
+[/question]
+
+卜得籤文：
+
+[result]
+{$luckness}
+[/result]
+
+請寫下針對 {question} 與 {result} 的批文，不超過40字
+內容古風文雅，且 *必為台灣繁體中文*
+
+批文格式：`批：{批文}`
+PROMPT;
+
+        $result = VertexAI::call($prompt);
+        $result = trim($result, " \n\r\t\v\0`");
+
+        if (0 !== strpos($result, "批：")) {
+            throw new \Exception("AI 可能被阻擋。原文： {$result}");
+        }
+
+        return $result;
     }
 
     protected function weighted_rand(array $ary): string
@@ -184,6 +266,11 @@ class OldGod
     ["第九九籤，癸壬 上上：\n貴人遭遇水雲鄉。冷淡交情滋味長。黃閣開時延故客。驊騮應得驟康莊。", "名與利。訟和事。家道康。皆吉利。病即安。孕生驥。婚則成。行人至。"],
     ["第一百籤，癸癸 上上：\n我本天仙雷雨師。吉凶禍福我先知。至誠禱祝皆靈應。抽得終籤百事宜。", "籤至百。數已終。我所知。象無凶。禱神扶。藉陰騭。危處安。損中益。"],
         ];
-        return $oracles[array_rand($oracles)];
+
+        $results = $oracles[array_rand($oracles)];
+
+        $results[] = $this->_llm_desc($question, implode("\n", $results));
+        $results = array_filter($results);
+        return $results;
     }
 }
