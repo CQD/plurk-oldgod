@@ -4,6 +4,7 @@
 use Q\OldGod\OldGod;
 
 require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../config.php';
 
 $question = implode(' ', array_slice($argv, 1));
 
