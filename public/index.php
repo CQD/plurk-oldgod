@@ -41,12 +41,3 @@ function serve_static_file($path)
     http_response_code(404);
     echo "404";
 }
-
-function qlog($level, $msg)
-{
-    if (defined('STDERR')) {
-        fputs(STDERR, $msg . "\n");
-    } else {
-        syslog($level, $msg);
-    }
-}

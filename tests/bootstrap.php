@@ -2,10 +2,7 @@
 
 include __DIR__ . '/../vendor/autoload.php';
 
-function qlog()
-{
-    // noop
-}
+define('NO_QLOG', true);
 
 class DummyQlurk
 {

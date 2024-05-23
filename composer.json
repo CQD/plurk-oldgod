@@ -2,7 +2,10 @@
     "autoload": {
         "psr-4": {
             "Q\\OldGod\\": "src/"
-        }
+        },
+        "files": [
+            "src/functions.php"
+        ]
     },
     "require": {
         "qlurk/qlurk": "^0.2"
