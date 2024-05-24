@@ -23,7 +23,7 @@ body{
     display: grid;
     min-height:100vh;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 17em;
+    grid-template-rows: 1fr auto;
     grid-template-areas: "main main"
                          "desc about";;
 }
@@ -131,10 +131,13 @@ hr{
 </section>
 
 <section id="desc">
-問吉兇：<br>
-「老神 請問 ONS 的吉兇」<br>
-「老神 問吉兇 打小孩」<br>
+直接問事：<br>
 「老神 我要後宮」<br>
+「老神 明天會不會遇見愛情」<br>
+<br>
+問吉兇：<br>
+「老神 問吉兇 打小孩」<br>
+「老神 請問相親的吉兇」<br>
 <br>
 求籤：<br>
 「老神我想打籃球，請賜籤」<br>
