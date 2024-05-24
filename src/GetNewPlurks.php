@@ -6,7 +6,6 @@ use Q\OldGod\OldGod;
 
 class GetNewPlurks
 {
-    public $interval = 15;
     private $qlurk;
 
     public function __construct($qlurk)
@@ -14,7 +13,7 @@ class GetNewPlurks
         $this->qlurk = $qlurk;
     }
 
-    public function run()
+    public function run($dryRun = false)
     {
         if (!$this->canRunCron()) {
             http_response_code(403);
@@ -22,19 +21,32 @@ class GetNewPlurks
             return;
         }
 
-        for ($i = 0; $i < 4; $i++) {
-            $startTime = microtime(true);
-            $this->replyNewPlurks();
-            $this->replyOldPlurks();
-            $endTime = microtime(true);
+        $interval = 7;
+        $max = 59;
 
-            $execTime = $endTime - $startTime;
-            $sleepTime = max(0, (int) ($this->interval - $execTime));
-            qlog(LOG_DEBUG, sprintf("execTime: %5.3s, sleepTime: %s", $execTime, $sleepTime));
+        $start_time = microtime(true);
+        for ($offset = 0; $offset <= $max; $offset+=$interval) {
+            $wakeTime = $start_time + $offset;
+            $now = microtime(true);
 
-            if ($i < 3) {
-                sleep($sleepTime);
+            if ($now < $wakeTime) {
+                $sleepTime = ($wakeTime - $now) * 1000000;
+                $sleepTime = (int) ($sleepTime);
+                qlog(LOG_DEBUG, sprintf("sleep %5.2f sec", $sleepTime / 1000000));
+                usleep($sleepTime);
             }
+
+            $execStartTime = microtime(true);
+            if (!$dryRun) {
+                $this->replyNewPlurks();
+                $this->replyOldPlurks();
+            } else {
+                usleep(500 * 1000); // 1 sec
+                qlog(LOG_DEBUG, "dry run");
+            }
+            $execEndTime = microtime(true);
+
+            qlog(LOG_DEBUG, sprintf("execTime: %5.2f sec", $execEndTime - $execStartTime));
         }
     }
 
