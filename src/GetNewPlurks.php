@@ -21,8 +21,8 @@ class GetNewPlurks
             return;
         }
 
-        $interval = 7;
-        $max = 59;
+        $interval = 7.4;
+        $max = 55;
 
         $start_time = microtime(true);
         for ($offset = 0; $offset <= $max; $offset+=$interval) {
@@ -45,7 +45,7 @@ class GetNewPlurks
             }
             $execEndTime = microtime(true);
 
-            qlog(LOG_DEBUG, sprintf("sleepTime: %5.2f, execTime: %5.2f sec", $sleepTime, $execEndTime - $execStartTime));
+            qlog(LOG_DEBUG, sprintf("offset: %.2f, sleepTime: %5.2f, execTime: %5.2f sec", $offset, $sleepTime, $execEndTime - $execStartTime));
         }
     }
 
