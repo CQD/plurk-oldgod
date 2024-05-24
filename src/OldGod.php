@@ -50,6 +50,8 @@ class OldGod
         $luckness = $this->_luckness($question);
 
         $desc = $this->_llm_desc($question, $luckness);
+        $desc = str_replace("**", "", $desc);  // 有時候會亂加粗體
+
         $basic_answer = null;
 
         if ($desc_only) {
