@@ -6,7 +6,7 @@ use GuzzleHttp\Client as HttpClient;
 
 class VertexAI
 {
-    public static function call($prompt, $configs = [])
+    public static function call(string $prompt, $configs = [], string $system_prompt = null)
     {
         $payload = [
             "contents" => [
@@ -42,6 +42,14 @@ class VertexAI
                 ],
             ]
         ];
+
+        if ($system_prompt) {
+            $payload["systemInstruction"] = [
+                "parts" => [
+                    "text" => $system_prompt,
+                ],
+            ];
+        }
 
         $payload["generationConfig"] = array_merge($payload["generationConfig"], $configs);
 
