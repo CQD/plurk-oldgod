@@ -102,10 +102,4 @@ class VertexAI
 
         return $result_text;
     }
-
-    public function getVertexAIResponse($vertexAIRequest)
-    {
-        $vertexAIResponse = $this->getVertexAIResponse($vertexAIRequest);
-        return $vertexAIResponse;
-    }
 }
