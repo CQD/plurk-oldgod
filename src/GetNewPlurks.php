@@ -182,8 +182,9 @@ class GetNewPlurks
         }
 
         $replies = $oldgod->ask($msg);
+        $len = count($replies);
+        qlog(LOG_DEBUG, "回覆 {$plurkId} {$len} 則訊息");
         foreach ($replies as $reply) {
-            qlog(LOG_DEBUG, "回覆 {$plurkId}");
             $this->qlurk->call('/APP/Responses/responseAdd', ['plurk_id' => $plurkId, 'content' => $reply, 'qualifier' => ':']);
         }
     }
