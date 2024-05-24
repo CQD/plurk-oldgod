@@ -171,7 +171,8 @@ class GetNewPlurks
         $len = count($replies);
         qlog(LOG_DEBUG, "回覆 {$plurkId} {$len} 則訊息");
         foreach ($replies as $reply) {
-            $this->qlurk->call('/APP/Responses/responseAdd', ['plurk_id' => $plurkId, 'content' => $reply, 'qualifier' => ':']);
+            $rsp = $this->qlurk->call('/APP/Responses/responseAdd', ['plurk_id' => $plurkId, 'content' => $reply, 'qualifier' => ':']);
+            qlog(LOG_DEBUG, "responseAdd 結果: " . json_encode($rsp, JSON_UNESCAPED_UNICODE));
         }
     }
 }
