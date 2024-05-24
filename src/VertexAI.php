@@ -51,6 +51,7 @@ class VertexAI
             VERTEX_API_TOKEN,
         );
 
+        $start_time = microtime(true);
         $resp = (new HttpClient())->post($url, [
             'headers' => [
                 'Content-Type' => 'application/json',
@@ -59,7 +60,10 @@ class VertexAI
         ]);
 
         $bodyRaw = (string) $resp->getBody();
+        $end_time = microtime(true);
+
         $body = json_decode($bodyRaw, true);
+        $body["_time_used"] = $end_time - $start_time;
 
         if (($body["candidates"] ?? null) === null) {
             qlog(LOG_WARNING, "Bad LLM response: ". json_encode($body, JSON_UNESCAPED_UNICODE));
