@@ -21,7 +21,9 @@ body{
     margin:0;
     padding:0;
     display: grid;
+    min-height:100vh;
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 17em;
     grid-template-areas: "main main"
                          "desc about";;
 }
@@ -34,7 +36,6 @@ a {
 #main{
     text-align: center;
     grid-area: main;
-    min-height:90vh;
     padding-bottom: 60px;
     box-sizing: border-box;
 }
@@ -107,6 +108,10 @@ hr{
 @media only screen and (max-width: 576px) {
     body {
         display:block;
+        min-height:0;
+    }
+    #main{
+        min-height: 50vh;
     }
     h1{
         font-size:50px;
