@@ -60,11 +60,18 @@ h1{
 }
 #ask{
     color:#7D4F1D;
-    background-color: #FFAB52;
+    background-color: #FFBB72;
     border-radius: 15px;
     border: none;
     font-size: 30px;
     padding:3px 1em;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+#ask.running{
+    cursor: not-allowed;
+    color:#321;
+    opacity: 0.4;
 }
 #answers{
     display: none;
@@ -146,9 +153,14 @@ let last_ask_time = 0
 function ask_oldgod() {
     const now = new Date()
     const question = q.value
-    if (!question || now - last_ask_time < 300) {
+    if (!question || now - last_ask_time < 300 || ask.classList.contains('running')) {
         return
     }
+
+    const old_btn_text = ask.textContent
+    ask.classList.add('running')
+    ask.textContent = '老神老神正在思考'
+
     fetch(`/?q=${question}`)
     .then(res => {
         return res.json()
@@ -184,6 +196,10 @@ function ask_oldgod() {
         wrapper.style.height = 0
         setTimeout(() => {wrapper.style.height = answer_height + 'px'}, 30)
         setTimeout(() => {wrapper.style.height = 'auto'}, 1000)
+    })
+    .finally(() => {
+        ask.classList.remove('running')
+        ask.textContent = old_btn_text
     })
 
     last_ask_time = now
