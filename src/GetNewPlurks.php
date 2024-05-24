@@ -112,17 +112,12 @@ class GetNewPlurks
             return;
         }
 
-        // 把噗標示為已讀
-        // 先標已讀再回應是為了降低使用者連續回應的時候可能會有 race condition
-        // 導致太快貼的回應不會被回到
-        $ids = array_values(array_map(function($p){return $p['plurk_id'];}, $plurks));
-
-        qlog(LOG_DEBUG, "標已讀 " . json_encode($ids));
-        $this->qlurk->call('/APP/Timeline/markAsRead', ['ids' => json_encode($ids), 'note_position' => true]);
-
         // 未讀的訊息有召喚老神的話，回應之
         foreach ($plurks as $p) {
-            $r = $this->qlurk->call('/APP/Responses/get', ['plurk_id' => $p['plurk_id'], 'minimal_data' => true]);
+            $plurkId = $p['plurk_id'];
+            $r = $this->qlurk->call('/APP/Responses/get', ['plurk_id' => $plurkId, 'minimal_data' => true]);
+            $this->qlurk->call('/APP/Timeline/markAsRead', ['ids' => json_encode([$plurkId]), 'note_position' => true]);
+            qlog(LOG_DEBUG, "{$plurkId} 標已讀 ");
 
             $seenCnt = $p['responses_seen'];
 
