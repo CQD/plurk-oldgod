@@ -6,7 +6,12 @@ use GuzzleHttp\Client as HttpClient;
 
 class VertexAI
 {
-    public static function call(string $prompt, $configs = [], string $system_prompt = null)
+    public static function call(
+        string $prompt,
+        string $model = "gemini-1.5-flash-latest",
+        string $system_prompt = null,
+        array $configs = [],
+    )
     {
         $payload = [
             "contents" => [
@@ -55,8 +60,8 @@ class VertexAI
 
         $url = sprintf(
             "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
-            "gemini-1.5-flash-latest",
-            VERTEX_API_TOKEN,
+            urlencode($model),
+            urlencode(VERTEX_API_TOKEN),
         );
 
         $start_time = microtime(true);
