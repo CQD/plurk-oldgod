@@ -57,6 +57,8 @@ class VertexAI
 
         $payload["generationConfig"] = array_merge($payload["generationConfig"], $configs);
 
+        // note: 不要紀錄 payload，避免問題被記錄下來。 LLM response 還是會記錄，不然太難 debug
+
         $url = sprintf(
             "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
             urlencode($model),
