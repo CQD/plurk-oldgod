@@ -136,6 +136,7 @@ class OldGod
 
 批文格式：`批：{批文}`
 PROMPT;
+        $prompt = trim($prompt);
 
         $result = VertexAI::call($prompt);
         $result = trim($result, " \n\r\t\v\0`");
