@@ -86,13 +86,26 @@ class OldGod
 
     protected function _llm_desc(string $question, string $luckness): string
     {
+        $upper_question = strtoupper($question);
+
         $fallbacks = [
             '笑而不答' => 10,
             '自己想想' => 10,
             '嗯...嗯' => 10,
+            '吾什麼都不知道' => 10,
+            '盡在不言中' => 10,
+            '吾，吾才沒有腦袋打結一下寫不出批文' => 7,
             '覺得該說些什麼但想想還是別說好了' => 5,
             '不可瑟瑟' => 2,
         ];
+
+        if (strpos($upper_question, "QQ") !== false) {
+            $fallbacks['QQ'] = 15;
+        }
+
+        if (preg_match('/Q_+Q/', $question, $matches) || preg_match('/T_+T/', $question, $matches)) {
+            $fallbacks['哭哭'] = 15;
+        }
 
         $retries = 2;
         for ($i = 1; $i <= $retries; $i++) {
