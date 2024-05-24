@@ -26,7 +26,6 @@ class VertexAI
             "generationConfig" => [
                 "maxOutputTokens" => 80,
                 "temperature" => 2,
-                "topP" => 0.95
             ],
             "safetySettings" => [
                 [
