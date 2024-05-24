@@ -1,0 +1,13 @@
+#!/usr/bin/env php
+<?php
+
+use Q\OldGod\GetNewPlurks;
+
+require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../config.php';
+
+$_SERVER['HTTP_HOST'] = 'localhost';
+$qlurk = new \Qlurk\ApiClient(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
+
+$job = new GetNewPlurks($qlurk);
+$job->run(true);

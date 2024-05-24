@@ -29,11 +29,10 @@ class GetNewPlurks
             $wakeTime = $start_time + $offset;
             $now = microtime(true);
 
+            $sleepTime = 0;
             if ($now < $wakeTime) {
-                $sleepTime = ($wakeTime - $now) * 1000000;
-                $sleepTime = (int) ($sleepTime);
-                qlog(LOG_DEBUG, sprintf("sleep %5.2f sec", $sleepTime / 1000000));
-                usleep($sleepTime);
+                $sleepTime = $wakeTime - $now;
+                usleep((int) ($sleepTime * 1000000));
             }
 
             $execStartTime = microtime(true);
@@ -46,7 +45,7 @@ class GetNewPlurks
             }
             $execEndTime = microtime(true);
 
-            qlog(LOG_DEBUG, sprintf("execTime: %5.2f sec", $execEndTime - $execStartTime));
+            qlog(LOG_DEBUG, sprintf("sleepTime: %5.2f, execTime: %5.2f sec", $sleepTime, $execEndTime - $execStartTime));
         }
     }
 
