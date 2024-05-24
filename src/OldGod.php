@@ -94,18 +94,15 @@ class OldGod
             '不可瑟瑟' => 2,
         ];
 
-        try {
-            return $this->__llm_desc($question, $luckness);
-        } catch (\Throwable $e) {
-            qlog(LOG_ERR, "Error 1: " . $e->getMessage());
+        $retries = 2;
+        for ($i = 1; $i <= $retries; $i++) {
             try {
                 return $this->__llm_desc($question, $luckness);
-            }
-            catch (\Throwable $e) {
-                qlog(LOG_ERR, "Error 2: " . $e->getMessage());
-                return sprintf("批：%s。", $this->weighted_rand($fallbacks));
+            } catch (\Throwable $e) {
+                qlog(LOG_ERR, "Error {$i} " . $e->getMessage());
             }
         }
+        return sprintf("批：%s。", $this->weighted_rand($fallbacks));
     }
 
     protected function __llm_desc(string $question, string $luckness): string
