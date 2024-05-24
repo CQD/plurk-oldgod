@@ -7,10 +7,14 @@ use Q\OldGod\OldGod;
 class GetNewPlurks
 {
     private $qlurk;
+    private $interval;
+    private $max_time;
 
-    public function __construct($qlurk)
+    public function __construct($qlurk, $interval = 7.4, $max_time = 55)
     {
         $this->qlurk = $qlurk;
+        $this->max_time = $max_time;
+        $this->interval = $interval;
     }
 
     public function run($dryRun = false)
@@ -21,11 +25,11 @@ class GetNewPlurks
             return;
         }
 
-        $interval = 7.4;
-        $max = 55;
+        $interval = $this->interval;
+        $max_time = $this->max_time;
 
         $start_time = microtime(true);
-        for ($offset = 0; $offset <= $max; $offset+=$interval) {
+        for ($offset = 0; $offset <= $max_time; $offset+=$interval) {
             $wakeTime = $start_time + $offset;
             $now = microtime(true);
 

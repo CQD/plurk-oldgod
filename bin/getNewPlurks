@@ -9,5 +9,9 @@ require __DIR__ . '/../config.php';
 $_SERVER['HTTP_HOST'] = 'localhost';
 $qlurk = new \Qlurk\ApiClient(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
 
-$job = new GetNewPlurks($qlurk);
+$job = new GetNewPlurks(
+    $qlurk,
+    interval: 3,
+    max_time: 60,
+);
 $job->run(false);
