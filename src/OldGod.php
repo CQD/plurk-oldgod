@@ -10,14 +10,7 @@ class OldGod
     public function ask($question): array
     {
         $question = strtolower(trim($question));
-
-        foreach (['老神', '@oldgod', 'oldgod'] as $myName) {
-            if (0 === strpos($question, $myName)) {
-                $question = trim(str_replace($myName, '', $question));
-                break;
-            }
-        }
-
+        $question = str_replace("@oldgod", "老神", $question);
 
         if (false !== strpos($question, '籤')) {
             return $this->oracle($question);
