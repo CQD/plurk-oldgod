@@ -36,13 +36,8 @@ class GetNewPlurks
             }
 
             $execStartTime = microtime(true);
-            if (!$dryRun) {
-                $this->replyNewPlurks();
-                $this->replyOldPlurks();
-            } else {
-                usleep(500 * 1000); // 1 sec
-                qlog(LOG_DEBUG, "dry run");
-            }
+            $this->replyNewPlurks($dryRun);
+            $this->replyOldPlurks($dryRun);
             $execEndTime = microtime(true);
 
             qlog(LOG_DEBUG, sprintf("offset: %.2f, sleepTime: %5.2f, execTime: %5.2f sec", $offset, $sleepTime, $execEndTime - $execStartTime));
@@ -65,7 +60,7 @@ class GetNewPlurks
         return false;
     }
 
-    protected function replyNewPlurks()
+    protected function replyNewPlurks($dryRun = false)
     {
         $plurks = $this->qlurk->call('/APP/Timeline/getPlurks', ['minimal_data' => 0]);
         $plurks = $plurks['plurks'] ?? [];
@@ -83,6 +78,12 @@ class GetNewPlurks
             return 1 !== (int) $p['responded'];
         });
 
+        if ($dryRun) {
+            $plurkIds = array_column($plurks, 'plurk_id');
+            qlog(LOG_DEBUG, "dryRun，跳過這些新噗不回應: " . implode(", ", $plurkIds ?: ["沒有"]));
+            return;
+        }
+
         // 回應這些還沒回應過的請神噗
         foreach ($plurks as $p) {
             $this->respond($p['plurk_id'], $p['content_raw']);
@@ -90,7 +91,7 @@ class GetNewPlurks
 
     }
 
-    protected function replyOldPlurks()
+    protected function replyOldPlurks($dryRun = false)
     {
         $plurks = $this->qlurk->call('/APP/Timeline/getUnreadPlurks', ['filter' => 'responded']);
         $plurks = $plurks['plurks'] ?? [];
@@ -101,6 +102,12 @@ class GetNewPlurks
         });
 
         // 沒有要回應噗的就不做後面的邏輯了
+        if ($dryRun) {
+            $plurkIds = array_column($plurks, 'plurk_id');
+            qlog(LOG_DEBUG, "dryRun，跳過這些舊噗不回應: " . implode(", ", $plurkIds ?: ["沒有"]));
+            return;
+        }
+
         if (!$plurks) {
             return;
         }
