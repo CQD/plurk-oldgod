@@ -21,18 +21,18 @@ class OldGod
 
         if (false !== strpos($question, '籤')) {
             return $this->oracle($question);
-        // } elseif (false !== strpos($question, '吉凶')) {
-        //     return $this->luckness($question, false);
+        } elseif (false !== strpos($question, '吉凶')) {
+            return $this->luckness($question, desc_only: false);
         } else {
-            return $this->luckness($question, true);
+            return $this->luckness($question, desc_only: true);
         }
     }
 
-    protected function luckness(string $question, bool $with_llm_desc = false): array
+    protected function luckness(string $question, bool $desc_only = false): array
     {
         $question = strtoupper($question);
 
-        $act = [
+        $actions = [
             "隨便說" => 1,
             "問路人" => 1,
             "上廁所" => 1,
@@ -49,17 +49,17 @@ class OldGod
 
         $luckness = $this->_luckness($question);
 
-        $basic_answer = sprintf(
-            "吾%s，以之為「%s」",
-            $this->weighted_rand($act),
-            $luckness,
-        );
+        $desc = $this->_llm_desc($question, $luckness);
+        $basic_answer = null;
 
-        $desc = $with_llm_desc ? $this->_llm_desc($question, $luckness) : "";
+        if ($desc_only) {
+            $desc = str_replace("批：", "", $desc);
+        } else {
+            $action = $this->weighted_rand($actions);
+            $basic_answer = sprintf("吾%s，以之為「%s」", $action, $luckness);
+        }
 
-        $results = [$basic_answer, $desc];
-        $results = array_filter($results);
-        return $results;
+        return array_filter([$basic_answer, $desc]);
     }
 
     protected function _luckness(string $question): string
