@@ -59,7 +59,7 @@ class OldGod
             $basic_answer = sprintf("吾%s，以之為「%s」", $action, $luckness);
         }
 
-        return array_filter([$basic_answer, $desc]);
+        return array_values(array_filter([$basic_answer, $desc]));
     }
 
     protected function _luckness(string $question): string
@@ -277,7 +277,7 @@ PROMPT;
         $results = $oracles[array_rand($oracles)];
 
         $results[] = $this->_llm_desc($question, implode("\n", $results));
-        $results = array_filter($results);
+        $results = array_values(array_filter($results));
         return $results;
     }
 }
