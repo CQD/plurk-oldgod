@@ -9,6 +9,11 @@ class OldGod
 
     public function ask($question): array
     {
+        if (mb_strlen($question) > 200){
+            return ["汝問之事太長，吾無法回答。"];
+        }
+
+
         $question = strtolower(trim($question));
         $question = str_replace("@oldgod", "老神", $question);
 
