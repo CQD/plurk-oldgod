@@ -145,7 +145,7 @@ PROMPT;
         $prompt = trim($prompt);
 
         $result = VertexAI::call($prompt, system_prompt: $system_prompt);
-        $result = trim($result, " \n\r\t\v\0`");
+        $result = trim($result, " \n\r\t\v\0`{}[]");
 
         if (0 !== strpos($result, "批：")) {
             throw new \Exception("AI 可能被阻擋。原文： {$result}");
