@@ -58,6 +58,11 @@ class VertexAI
         $payload["generationConfig"] = array_merge($payload["generationConfig"], $configs);
 
         // note: 不要紀錄 payload，避免問題被記錄下來。 LLM response 還是會記錄，不然太難 debug
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $host = explode(':', $host)[0];
+        if (in_array($host, ['localhost', '', '127.0.0.1'])) {
+            qlog(LOG_DEBUG, "LLM payload: ". json_encode($payload, JSON_UNESCAPED_UNICODE));
+        }
 
         $url = sprintf(
             "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
