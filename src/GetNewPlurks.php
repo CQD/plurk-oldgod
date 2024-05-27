@@ -149,6 +149,7 @@ class GetNewPlurks
         $plurksShouldMute = array_filter($plurks, function($p){
             $content = strtolower($p['content_raw']);
             if (2 === $p['is_unread']) return true;
+            if ($this->isKarmago($content)) return true;
             if (0 === strpos($content, '老神')) return false;
             if (0 === strpos($content, '@oldgod')) return false;
             return true;
@@ -179,5 +180,18 @@ class GetNewPlurks
         foreach ($replies as $reply) {
             $rsp = $this->qlurk->call('/APP/Responses/responseAdd', ['plurk_id' => $plurkId, 'content' => $reply, 'qualifier' => ':']);
         }
+    }
+
+    protected function isKarmago(string $question): bool {
+        $lowerQuestion = strtolower($question);
+        $botKeywords = ["機器狼", "開村", "人狼", "召喚", "karmago", "蛋糕獸", "晚餐"];
+
+        // 關鍵字出現太多次就當作是在騙卡馬，不參與
+        $count = 0;
+        foreach ($botKeywords as $keyword) {
+            $count += substr_count($lowerQuestion, $keyword);
+        }
+
+        return $count >= 4;
     }
 }
