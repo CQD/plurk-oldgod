@@ -7,26 +7,32 @@ use GuzzleHttp\Client as HttpClient;
 class VertexAI
 {
     public static function call(
-        string $prompt,
+        string|array $contents = "",
         string $model = "gemini-1.5-flash-latest",
         string $system_prompt = null,
         array $configs = [],
     )
     {
-        $payload = [
-            "contents" => [
+        if (is_string($contents)) {
+            $contents = [
                 [
                     "parts" => [
                         [
-                            "text" => $prompt,
-                        ]
+                            "text" => $contents,
+                        ],
                     ],
-                ]
-            ],
-            "generationConfig" => [
-                "maxOutputTokens" => 80,
-                "temperature" => 2,
-            ],
+                ],
+            ];
+        }
+
+        $configs = $configs + [
+            "maxOutputTokens" => 80,
+            "temperature" => 2,
+        ];
+
+        $payload = [
+            "contents" => $contents,
+            "generationConfig" => $configs,
             "safetySettings" => [
                 [
                     "category" => "HARM_CATEGORY_HATE_SPEECH",
