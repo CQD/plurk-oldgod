@@ -348,7 +348,7 @@ PROMPT;
         $titles = [];
         foreach ($urls as $url) {
             $title = $this->get_page_title($url);
-            $title = $title || '{取不到標題}';
+            $title = $title ?: '{取不到標題}';
             $title = str_replace("\n", ' ', $title);
             $titles[] = $title;
         }
@@ -381,6 +381,11 @@ PROMPT;
                 ],
                 'timeout' => 3,
             ]);
+
+            $status = $res->res->getStatusCode();
+            if ($status === 404) return '[此頁無存]';
+            if ($status >= 400) return null;
+
             $content_type = $res->getHeaderLine('Content-Type');
             if (strpos($content_type, 'text/html') === false) {
                 qlog(LOG_INFO, "不處理 content type 是 `{$content_type}` 的內容");
@@ -390,8 +395,11 @@ PROMPT;
             $html = (string) $res->getBody();
 
             return $this->get_title_from_html($html);
-        } catch (\Exception $e) {
+        } catch (\GuzzleHttp\Exception\BadResponseException $e) {
             qlog(LOG_ERR, $e->getMessage());
+
+            $status = $e->getResponse()->getStatusCode();
+            if ($status === 404) return '[此頁無存]';
         }
 
         return null;
