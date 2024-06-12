@@ -119,7 +119,7 @@ class GetNewPlurks
         // 未讀的訊息有召喚老神的話，回應之
         foreach ($plurks as $p) {
             $plurkId = $p['plurk_id'];
-            $r = $this->qlurk->call('/APP/Responses/get', ['plurk_id' => $plurkId, 'minimal_data' => true]);
+            $r = $this->qlurk->call('/APP/Responses/get', ['plurk_id' => $plurkId]);
             $this->qlurk->call('/APP/Timeline/markAsRead', ['ids' => json_encode([$plurkId]), 'note_position' => true]);
             qlog(LOG_DEBUG, "{$plurkId} 標已讀 ");
 
@@ -130,7 +130,7 @@ class GetNewPlurks
                     continue;
                 }
 
-                $content = strtolower($response['content']);
+                $content = strtolower($response['content_raw'] ?? $response['content']);
                 if(0 === strpos($content, '老神') || 0 === strpos($content, '@oldgod')){
                     $this->respond($response['plurk_id'], $content);
                 }
