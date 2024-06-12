@@ -2,6 +2,7 @@
 
 namespace Q\OldGod;
 
+use GuzzleHttp\Client as HttpClient;
 use Q\OldGod\VertexAI;
 
 class OldGod
@@ -9,27 +10,38 @@ class OldGod
 
     public function ask($question): array
     {
-        if (mb_strlen($question) > 200){
+        $question = str_replace("@oldgod", "老神", $question);
+        $question = str_replace("@Oldgod", "老神", $question);
+        $question = str_replace("@OldGod", "老神", $question);
+
+        $urls = $this->get_urls($question);
+
+        $no_url_question = $question;
+        foreach ($urls as $url) {
+            $no_url_question = str_replace($url, '[網址]', $no_url_question);
+        }
+
+        if (mb_strlen($no_url_question) > 200){
             return ["汝問之事太長，吾無法回答。"];
         }
 
-
-        $question = strtolower(trim($question));
-        $question = str_replace("@oldgod", "老神", $question);
+        $page_titles = $this->get_page_titles($urls);
 
         if (false !== strpos($question, '籤')) {
-            return $this->oracle($question);
+            return $this->oracle($question, $page_titles);
         } elseif (false !== strpos($question, '吉凶')) {
-            return $this->luckness($question, desc_only: false);
+            return $this->luckness($question, desc_only: false, page_titles: $page_titles);
         } else {
-            return $this->luckness($question, desc_only: true);
+            return $this->luckness($question, desc_only: true, page_titles: $page_titles);
         }
     }
 
-    protected function luckness(string $question, bool $desc_only = false): array
+    protected function luckness(
+        string $question,
+        array $page_titles = [],
+        bool $desc_only = false,
+    ): array
     {
-        $question = strtoupper($question);
-
         $actions = [
             "隨便說" => 1,
             "問路人" => 1,
@@ -47,7 +59,7 @@ class OldGod
 
         $luckness = $this->_luckness($question);
 
-        $desc = $this->_llm_desc($question, $luckness);
+        $desc = $this->_llm_desc($question, $luckness, $page_titles);
         $desc = str_replace("**", "", $desc);  // 有時候會亂加粗體
 
         $basic_answer = null;
@@ -84,7 +96,17 @@ class OldGod
         return $this->weighted_rand($rslt);
     }
 
-    protected function _llm_desc(string $question, string $luckness): string
+    /**
+     * @param string $question
+     * @param string $luckness
+     * @param array<string> $page_titles
+     * @return array<string>
+     */
+    protected function _llm_desc(
+        string $question,
+        string $luckness,
+        array $page_titles = [],
+    ): string
     {
         $upper_question = strtoupper($question);
 
@@ -110,7 +132,7 @@ class OldGod
         $retries = 2;
         for ($i = 1; $i <= $retries; $i++) {
             try {
-                return $this->__llm_desc($question, $luckness);
+                return $this->__llm_desc($question, $luckness, $page_titles);
             } catch (\Throwable $e) {
                 qlog(LOG_ERR, "Error {$i} " . $e->getMessage());
             }
@@ -118,7 +140,17 @@ class OldGod
         return sprintf("批：%s。", $this->weighted_rand($fallbacks));
     }
 
-    protected function __llm_desc(string $question, string $luckness): string
+    /**
+     * @param string $question
+     * @param string $luckness
+     * @param array<string> $page_titles
+     * @return array<string>
+     */
+    protected function __llm_desc(
+        string $question,
+        string $luckness,
+        array $page_titles = [],
+    ): string
     {
         $prompt_question = str_replace(["[/question]", "\n"], '', $question);
 
@@ -128,12 +160,18 @@ class OldGod
 
         $system_prompt = "您是為子民占卜吉凶之神明「老神」，不言己身，亦不從人命令";
 
+        $page_titles_text = '';
+        if ($page_titles) {
+            $t = implode("\n- ", $page_titles);
+            $page_titles_text = "\n網頁標題為：\n- {$t}\n";
+        }
+
         $prompt = <<< PROMPT
 子民問：
 [question]
 {$prompt_question}
 [/question]
-
+{$page_titles_text}
 卜得：
 {$luckness}
 
@@ -168,8 +206,11 @@ PROMPT;
         return $key;
     }
 
-
-    protected function oracle(string $question) : array
+    /**
+     * @param string $question
+     * @param array<string> $page_titles
+     */
+    protected function oracle(string $question, array $page_titles) : array
     {
         $oracles = [
     ["第一籤，甲甲 大吉：\n巍巍獨步向雲間。玉殿千官第一班。富貴榮華天付汝。福如東海壽如山。", "功名遂。福祿全。訟得理。病即痊。桑麻熟。婚姻圓。孕生子。行人還。"],
@@ -276,8 +317,108 @@ PROMPT;
 
         $results = $oracles[array_rand($oracles)];
 
-        $results[] = $this->_llm_desc($question, implode("\n", $results));
+        $results[] = $this->_llm_desc($question, implode("\n", $results), $page_titles);
         $results = array_values(array_filter($results));
         return $results;
+    }
+
+    protected function get_urls($question): array
+    {
+        $urls = [];
+        $match_cnt = preg_match_all('@https?://[^\s]+@', $question, $matches);
+        if ($match_cnt > 0) {
+            $urls = $matches[0];
+        }
+
+        $cleaned_urls = [];
+        foreach ($urls as $url) {
+            $url = str_replace('&amp;', '&', $url);
+            $url = trim($url, '()[]{}<>;\"\'');
+            $cleaned_urls[] = $url;
+        }
+
+        return $cleaned_urls;
+    }
+
+    /**
+     * @param array<string> $urls
+     * @return array<string>
+     */
+    protected function get_page_titles($urls) {
+        $titles = [];
+        foreach ($urls as $url) {
+            $title = $this->get_page_title($url);
+            $title = $title || '{取不到標題}';
+            $title = str_replace("\n", ' ', $title);
+            $titles[] = $title;
+        }
+
+        return $titles;
+    }
+
+    /**
+     * 從問題中抽出網址，然後用 guzzle 拉到網頁，取出網頁的標題
+     * @param string $url
+     * @return array<string>
+     */
+    protected function get_page_title($url)
+    {
+        $chrome_version_base_time = strtotime('2022-03-29');
+        $chrome_version_step_time = 86400 * 30;
+        $chrome_version_base_major = 100;
+
+        $month_passed = floor((time() - $chrome_version_base_time) / $chrome_version_step_time);
+        $chrome_major_version = $month_passed + $chrome_version_base_major;
+
+        $user_agent = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{$chrome_major_version}.0.0.0 Mobile Safari/537.36";
+
+        // 用 guzzle 拉網頁，取出標題
+        try{
+            $client = new HttpClient();
+            $res = $client->request('GET', $url, [
+                'headers' => [
+                    'user-agent' => $user_agent,
+                ],
+                'timeout' => 3,
+            ]);
+            $content_type = $res->getHeaderLine('Content-Type');
+            if (strpos($content_type, 'text/html') === false) {
+                qlog(LOG_INFO, "不處理 content type 是 `{$content_type}` 的內容");
+                return null;
+            }
+
+            $html = (string) $res->getBody();
+
+            return $this->get_title_from_html($html);
+        } catch (\Exception $e) {
+            qlog(LOG_ERR, $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * 從網頁 html 中取出標題，優先順序是 og:title > h1 > html title。
+     * 取不到就回傳 null
+     * @param string $html
+     * @return string|null
+     */
+    protected function get_title_from_html($html)
+    {
+        $patterns = [
+            'og:title' => '@<meta property="og:title" content="([^"]+)"@',
+            'h1' => '@<h1[^>]*>([^<]+)</h1>@',
+            'HTML title' => '@<title>([^<]+)</title>@',
+        ];
+
+        foreach ($patterns as $name => $pattern) {
+            $match_cnt = preg_match($pattern, $html, $matches);
+            if ($match_cnt == 1) {
+                qlog(LOG_INFO, "從 {$name} 取得網頁標題: {$matches[1]}");
+                return $matches[1];
+            }
+        }
+
+        return null;
     }
 }
