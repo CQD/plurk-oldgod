@@ -71,7 +71,7 @@ class GetNewPlurks
 
         // 把沒有呼喚老神的噗通通消音
         // 然後把這些噗排除掉
-        $mutedIds = $this->muteNonSummoningPlurks($plurks);
+        $mutedIds = $this->muteNonSummoningPlurks($plurks, $dryRun);
         $plurks = array_filter($plurks, function($p) use ($mutedIds){
             return !in_array($p['plurk_id'], $mutedIds);
         });
@@ -82,17 +82,10 @@ class GetNewPlurks
             return 1 !== (int) $p['responded'];
         });
 
-        if ($dryRun) {
-            $plurkIds = array_column($plurks, 'plurk_id');
-            qlog(LOG_DEBUG, "dryRun，跳過這些新噗不回應: " . implode(", ", $plurkIds ?: ["沒有"]));
-            return;
-        }
-
         // 回應這些還沒回應過的請神噗
         foreach ($plurks as $p) {
-            $this->respond($p['plurk_id'], $p['content_raw']);
+            $this->respond($p['plurk_id'], $p['content_raw'], $dryRun);
         }
-
     }
 
     protected function replyOldPlurks($dryRun = false)
@@ -105,14 +98,8 @@ class GetNewPlurks
             return $p['response_count'] > $p['responses_seen'];
         });
 
-        // 沒有要回應噗的就不做後面的邏輯了
-        if ($dryRun) {
-            $plurkIds = array_column($plurks, 'plurk_id');
-            qlog(LOG_DEBUG, "dryRun，跳過這些舊噗不回應: " . implode(", ", $plurkIds ?: ["沒有"]));
-            return;
-        }
-
         if (!$plurks) {
+            qlog(LOG_DEBUG, "沒有未讀的訊息");
             return;
         }
 
@@ -120,8 +107,13 @@ class GetNewPlurks
         foreach ($plurks as $p) {
             $plurkId = $p['plurk_id'];
             $r = $this->qlurk->call('/APP/Responses/get', ['plurk_id' => $plurkId]);
-            $this->qlurk->call('/APP/Timeline/markAsRead', ['ids' => json_encode([$plurkId]), 'note_position' => true]);
-            qlog(LOG_DEBUG, "{$plurkId} 標已讀 ");
+
+            if (!$dryRun) {
+                qlog(LOG_DEBUG, "標示 {$plurkId} 為已讀");
+                $this->qlurk->call('/APP/Timeline/markAsRead', ['ids' => json_encode([$plurkId]), 'note_position' => true]);
+            } else {
+                qlog(LOG_DEBUG, "[dryRun] 標示 {$plurkId} 為已讀");
+            }
 
             $seenCnt = $p['responses_seen'];
 
@@ -132,7 +124,7 @@ class GetNewPlurks
 
                 $content = strtolower($response['content_raw'] ?? $response['content']);
                 if(0 === strpos($content, '老神') || 0 === strpos($content, '@oldgod')){
-                    $this->respond($response['plurk_id'], $content);
+                    $this->respond($response['plurk_id'], $content, $dryRun);
                 }
             }
         }
@@ -142,7 +134,7 @@ class GetNewPlurks
      * 把輸入的噗裡面沒有在呼叫老神的都消音。
      * 回傳被消音的 plurk id
      */
-    protected function muteNonSummoningPlurks(array $plurks): array
+    protected function muteNonSummoningPlurks(array $plurks, bool $dryRun): array
     {
         // 有呼喊老神的不放進排除清單
         // 已經被消音但有呼叫老神的也應該被放進排除清單
@@ -163,22 +155,34 @@ class GetNewPlurks
         $plurkIdsToMute = array_column($plurksToMute, 'plurk_id');
 
         if ($plurkIdsToMute) {
-            qlog(LOG_DEBUG, "消音 " . json_encode($plurkIdsToMute));
-            $this->qlurk->call('/APP/Timeline/mutePlurks', ['ids' => json_encode($plurkIdsToMute)]);
+            if ($dryRun) {
+                qlog(LOG_DEBUG, "[dryRun] 消音 " . json_encode($plurkIdsToMute));
+            } else {
+                qlog(LOG_DEBUG, "消音 " . json_encode($plurkIdsToMute));
+                $this->qlurk->call('/APP/Timeline/mutePlurks', ['ids' => json_encode($plurkIdsToMute)]);
+            }
         }
 
         return array_values($plurksIdsShouldMute);
     }
 
-    protected function respond(int $plurkId, string $msg)
+    protected function respond(int $plurkId, string $msg, bool $dryRun)
     {
         $oldgod = new OldGod();
 
         $replies = $oldgod->ask($msg);
         $len = count($replies);
-        qlog(LOG_DEBUG, "回覆 {$plurkId} {$len} 則訊息");
-        foreach ($replies as $reply) {
-            $rsp = $this->qlurk->call('/APP/Responses/responseAdd', ['plurk_id' => $plurkId, 'content' => $reply, 'qualifier' => ':']);
+
+        if ($dryRun) {
+            qlog(LOG_DEBUG, "[dryRun] 回覆 {$plurkId} {$len} 則訊息");
+            foreach ($replies as $reply) {
+                qlog(LOG_DEBUG, "[dryRun] - {$reply}");
+            }
+        } else {
+            qlog(LOG_DEBUG, "回覆 {$plurkId} {$len} 則訊息");
+            foreach ($replies as $reply) {
+                $rsp = $this->qlurk->call('/APP/Responses/responseAdd', ['plurk_id' => $plurkId, 'content' => $reply, 'qualifier' => ':']);
+            }
         }
     }
 
