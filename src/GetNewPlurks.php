@@ -106,6 +106,9 @@ class GetNewPlurks
         // 未讀的訊息有召喚老神的話，回應之
         foreach ($plurks as $p) {
             $plurkId = $p['plurk_id'];
+            $plurk_owner_id = $p['user_id'] ?? -1;
+            $first_content = $p['content_raw'] ?? $p['content'];
+
             $r = $this->qlurk->call('/APP/Responses/get', ['plurk_id' => $plurkId]);
 
             if (!$dryRun) {
@@ -117,15 +120,41 @@ class GetNewPlurks
 
             $seenCnt = $p['responses_seen'];
 
+            qlog(LOG_DEBUG, "[開頭] 問者：{$first_content}");
+
+            $history = ["問者：{$first_content}"];
+            $friends = [];
+            $OLDGOD_USER_ID = 9288960;
             foreach($r['responses'] ?? [] as $idx => $response) {
+                $user_id = $response['user_id'] ?? -9;
+                $content = $response['content_raw'] ?? $response['content'];
+                $user = "路人";
+
+                if ($user_id === $OLDGOD_USER_ID) {
+                    $user = "老神";
+                } elseif ($user_id === $plurk_owner_id) {
+                    $user = "問者";
+                } else {
+                    if (!isset($friends[$user_id])) {
+                        $friends[$user_id] = true;
+                    }
+                    $friend_idx = 1 + array_search($user_id, array_keys($friends));
+                    $user = "友人{$friend_idx}";
+                }
+
+                qlog(LOG_DEBUG, "[回文] {$user}：{$content}");
+
                 if ($idx < $seenCnt) {
+                    $history[] = "{$user}：{$content}";
                     continue;
                 }
 
                 $content = strtolower($response['content_raw'] ?? $response['content']);
                 if(0 === strpos($content, '老神') || 0 === strpos($content, '@oldgod')){
-                    $this->respond($response['plurk_id'], $content, $dryRun);
+                    $this->respond($response['plurk_id'], $content, $dryRun, $history);
                 }
+
+                $history[] = "{$user}：{$content}";
             }
         }
     }
@@ -166,11 +195,11 @@ class GetNewPlurks
         return array_values($plurksIdsShouldMute);
     }
 
-    protected function respond(int $plurkId, string $msg, bool $dryRun)
+    protected function respond(int $plurkId, string $msg, bool $dryRun, array $history = [])
     {
         $oldgod = new OldGod();
 
-        $replies = $oldgod->ask($msg);
+        $replies = $oldgod->ask($msg, $history);
         $len = count($replies);
 
         if ($dryRun) {

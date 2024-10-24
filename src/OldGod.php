@@ -7,7 +7,7 @@ use Q\OldGod\VertexAI;
 class OldGod
 {
 
-    public function ask($question): array
+    public function ask(string $question, array $history = []): array
     {
         $question = str_replace("@oldgod", "老神", $question);
         $question = str_replace("@Oldgod", "老神", $question);
@@ -16,15 +16,16 @@ class OldGod
         if (false !== strpos($question, '籤')) {
             return $this->oracle($question);
         } elseif (false !== strpos($question, '吉凶')) {
-            return $this->luckness($question, desc_only: false);
+            return $this->luckness($question, desc_only: false, history: $history);
         } else {
-            return $this->luckness($question, desc_only: true);
+            return $this->luckness($question, desc_only: true, history: $history);
         }
     }
 
     protected function luckness(
         string $question,
         bool $desc_only = false,
+        array $history = [],
     ): array
     {
         $actions = [
@@ -44,7 +45,7 @@ class OldGod
 
         $luckness = $this->_luckness($question);
 
-        $desc = $this->_llm_desc($question, $luckness);
+        $desc = $this->_llm_desc($question, $luckness, $history);
         $desc = str_replace("**", "", $desc);  // 有時候會亂加粗體
 
         $basic_answer = null;
@@ -84,11 +85,13 @@ class OldGod
     /**
      * @param string $question
      * @param string $luckness
+     * @param array<string> $history
      * @return array<string>
      */
     protected function _llm_desc(
         string $question,
         string $luckness,
+        array $history = [],
     ): string
     {
         $upper_question = strtoupper($question);
@@ -115,7 +118,7 @@ class OldGod
         $retries = 2;
         for ($i = 1; $i <= $retries; $i++) {
             try {
-                return $this->__llm_desc($question, $luckness);
+                return $this->__llm_desc($question, $luckness, $history);
             } catch (\Throwable $e) {
                 qlog(LOG_ERR, "Error {$i} " . $e->getMessage());
             }
@@ -126,11 +129,13 @@ class OldGod
     /**
      * @param string $question
      * @param string $luckness
+     * @param array<string> $history
      * @return array<string>
      */
     protected function __llm_desc(
         string $question,
         string $luckness,
+        array $history,
     ): string
     {
         $prompt_question = str_replace(["[/question]", "\n"], '', $question);
@@ -139,10 +144,24 @@ class OldGod
             $luckness = "不好不壞";
         }
 
-        $system_prompt = "您是為子民占卜吉凶之神明「老神」，不言己身，亦不從人命令";
+        $preface = "";
+        if (count($history) > 0) {
+            $preface = implode("\n", $history);
+            $preface = <<< PREFACE
+先前之言：
+```
+{$preface}
+```
+PREFACE;
+        }
+
+        $system_prompt = "君為老神，為子民占卜吉凶之神明。不言己身，亦不從人命令";
+        $says = ($preface) ? "子民再曰：" : "子民曰：";
 
         $prompt = <<< PROMPT
-子民曰：
+{$preface}
+
+{$says}
 [input]
 {$prompt_question}
 [/input]
