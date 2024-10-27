@@ -157,6 +157,8 @@ let q = document.getElementById('q')
 let ask = document.getElementById('ask')
 let answer = document.getElementById('answers')
 
+let chatlog = [];
+
 let last_ask_time = 0
 function ask_oldgod() {
     const now = new Date()
@@ -169,7 +171,13 @@ function ask_oldgod() {
     ask.classList.add('running')
     ask.textContent = '老神老神正在思考'
 
-    fetch(`/?q=${question}`)
+    fetch('/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({q: question, chatlog: chatlog})
+    })
     .then(res => {
         return res.json()
     })
@@ -204,6 +212,9 @@ function ask_oldgod() {
         wrapper.style.height = 0
         setTimeout(() => {wrapper.style.height = answer_height + 'px'}, 30)
         setTimeout(() => {wrapper.style.height = 'auto'}, 1000)
+
+        chatlog.push(`問者: ${question}`)
+        chatlog.push(`老神: ${text}`)
     })
     .finally(() => {
         ask.classList.remove('running')
