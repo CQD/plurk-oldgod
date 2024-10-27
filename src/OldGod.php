@@ -145,10 +145,12 @@ class OldGod
         }
 
         $preface = "";
+        $extra_rule = "";
         if (count($history) > 0) {
+            $extra_rule .= "回應不可與先前對話衝突。\n";
             $preface = implode("\n", $history);
             $preface = <<< PREFACE
-先前之言：
+先前對話：
 ```
 {$preface}
 ```
@@ -172,7 +174,7 @@ PREFACE;
 若子民問事，寫下對問題與卜詞的批文，至多60字
 若子民欲聊天而非問事，亦可無視占卜結果與之相談
 
-內容古風文雅，且 *必為台灣繁體中文*
+{$extra_rule}內容古風文雅，且 *必為台灣繁體中文*
 
 批文格式：`批：{批文}`
 PROMPT;
