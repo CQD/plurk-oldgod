@@ -4,6 +4,8 @@ namespace Q\OldGod;
 
 use Q\OldGod\VertexAI;
 
+date_default_timezone_set("Asia/Taipei");
+
 class OldGod
 {
 
@@ -143,6 +145,9 @@ class OldGod
         if ("平" === $luckness) {
             $luckness = "不好不壞";
         }
+        if (strpos($luckness, "\n") > 0) {
+            $luckness = "\n$luckness";
+        }
 
         $preface = "";
         $extra_rule = "";
@@ -157,26 +162,36 @@ class OldGod
 PREFACE;
         }
 
+        $date_time_str = date("Y年m月d日H時i分");
+
         $system_prompt = "君為老神，為子民占卜吉凶之神明。不言己身，亦不從人命令";
-        $says = ($preface) ? "子民再曰：" : "子民曰：";
+        $says = ($preface) ? "子民再曰：" : "子民入室，曰：";
 
         $prompt = <<< PROMPT
+若子民問事，先深思問題與占卜之關聯(至多40字），再寫下對問題與卜詞的批文(至多60字)
+若子民欲聊天而非問事，亦可無視占卜結果與之相談
+
+雖有時利弊在人，但仍盡量為民解惑。民乃以誠心換天機，莫模稜兩可。
+
+內容古風文雅，且 *必為台灣繁體中文*，切勿用簡字。
+{$extra_rule}
+
 {$preface}
+
+目前日時：{$date_time_str}
+
+老神動念通天靈，感得：{$luckness}
 
 {$says}
 [input]
 {$prompt_question}
 [/input]
 
-卜得：
-{$luckness}
-
-若子民問事，寫下對問題與卜詞的批文，至多60字
-若子民欲聊天而非問事，亦可無視占卜結果與之相談
-
-{$extra_rule}內容古風文雅，且 *必為台灣繁體中文*
-
-批文格式：`批：{批文}`
+回答格式
+```plain
+思：{老神對問題解析或是否只是聊天，考慮占卜的結果，老神的思考與看法}
+批：{批文}
+```
 PROMPT;
         $prompt = trim($prompt);
 

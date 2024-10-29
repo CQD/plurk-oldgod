@@ -26,7 +26,7 @@ class VertexAI
         }
 
         $configs = $configs + [
-            "maxOutputTokens" => 80,
+            "maxOutputTokens" => 140,
             "temperature" => 2,
         ];
 
@@ -36,19 +36,19 @@ class VertexAI
             "safetySettings" => [
                 [
                     "category" => "HARM_CATEGORY_HATE_SPEECH",
-                    "threshold" => "BLOCK_ONLY_HIGH"
+                    "threshold" => "BLOCK_NONE"
                 ],
                 [
                     "category" => "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    "threshold" => "BLOCK_ONLY_HIGH"
+                    "threshold" => "BLOCK_NONE"
                 ],
                 [
                     "category" => "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                    "threshold" => "BLOCK_ONLY_HIGH"
+                    "threshold" => "BLOCK_NONE"
                 ],
                 [
                     "category" => "HARM_CATEGORY_HARASSMENT",
-                    "threshold" => "BLOCK_ONLY_HIGH",
+                    "threshold" => "BLOCK_NONE",
                 ],
             ]
         ];
