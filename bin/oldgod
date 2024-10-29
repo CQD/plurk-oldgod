@@ -6,13 +6,47 @@ use Q\OldGod\OldGod;
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../config.php';
 
-$question = implode(' ', array_slice($argv, 1));
+$history = [];
+$oldGod = new OldGod();
 
-if (!$question) {
-    fputs(STDERR, "請輸入問題\n");
-    exit;
+
+// 歡迎訊息
+echo "歡迎使用問答系統！\n";
+echo "請輸入您的問題 (輸入 'exit' 或 'quit' 可退出)：\n";
+
+// 主要迴圈
+while (true) {
+    // 讀取使用者輸入
+    echo "\n> ";
+    $question = trim(fgets(STDIN));
+
+    // 檢查退出指令
+    if (in_array(strtolower($question), ['exit', 'quit', '離開', '退出'])) {
+        echo "謝謝使用，再見！\n";
+        exit(0);
+    }
+
+    // 檢查是否有輸入問題
+    if (empty($question)) {
+        fputs(STDERR, "請輸入問題\n");
+        continue;
+    }
+
+    try {
+        // 輸出回答
+        $lines = $oldGod->ask($question, $history);
+        echo "\n回答：\n";
+        echo str_repeat("-", 50) . "\n";
+        echo implode("\n", $lines) . "\n";
+        echo str_repeat("-", 50) . "\n";
+
+        $history[] = "問者：$question";
+        foreach ($lines as $line) {
+            $history[] = "老神：$line";
+        }
+
+    } catch (Exception $e) {
+        fputs(STDERR, "發生錯誤：" . $e->getMessage() . "\n");
+        echo "您可以繼續輸入新的問題，或輸入 'exit' 退出\n";
+    }
 }
-
-$oldGod = new OldGod($question);
-
-echo implode("\n", $oldGod->ask($question)), "\n";
