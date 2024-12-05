@@ -6,6 +6,10 @@ handlers:
   static_files: public/logo.png
   upload: public/logo\.png
 
+- url: /logo\.jpg
+  static_files: public/logo.jpg
+  upload: public/logo\.jpg
+
 - url: /.*
   script: auto
   secure: always
