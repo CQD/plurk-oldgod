@@ -67,7 +67,10 @@ class VertexAI
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $host = explode(':', $host)[0];
         if (in_array($host, ['localhost', '', '127.0.0.1'])) {
-            qlog(LOG_DEBUG, "LLM payload: ". json_encode($payload, JSON_UNESCAPED_UNICODE));
+            $user_prompt = array_reduce($contents, function ($carry, $item) {
+                return $carry . $item["parts"][0]["text"];
+            }, "");
+            qlog(LOG_DEBUG, "prompt:\n" . "------------\nsystem prompt\n------------\n" . $system_prompt . "\n\n------------\ncontent\n------------\n" . $user_prompt);
         }
 
         $url = sprintf(
@@ -93,8 +96,6 @@ class VertexAI
         if (($body["candidates"] ?? null) === null) {
             qlog(LOG_WARNING, "Bad LLM response: ". json_encode($body, JSON_UNESCAPED_UNICODE));
             throw new \Exception("Bad LLM response");
-        } else {
-            qlog(LOG_INFO, "LLM response: ". json_encode($body, JSON_UNESCAPED_UNICODE));
         }
 
         $result_text = "";
@@ -112,6 +113,8 @@ class VertexAI
                 $result_text .= $part["text"];
             }
         }
+
+        qlog(LOG_INFO, "LLM response:\n". $result_text);
 
         return $result_text;
     }
