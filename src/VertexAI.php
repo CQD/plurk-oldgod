@@ -11,6 +11,7 @@ class VertexAI
         string $model = "gemini-1.5-flash-latest",
         string $system_prompt = null,
         array $configs = [],
+        int $maxOutputTokens = 300,
     )
     {
         if (is_string($contents)) {
@@ -26,7 +27,7 @@ class VertexAI
         }
 
         $configs = $configs + [
-            "maxOutputTokens" => 140,
+            "maxOutputTokens" => $maxOutputTokens,
             "temperature" => 2,
         ];
 
