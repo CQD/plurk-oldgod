@@ -8,8 +8,8 @@ class VertexAI
 {
     public static function call(
         string|array $contents = "",
-        string $model = "gemini-1.5-flash-latest",
-        string $system_prompt = null,
+        string $model = "gemini-2.0-flash-exp",
+        string|null $system_prompt = null,
         array $configs = [],
         int $maxOutputTokens = 300,
     )
