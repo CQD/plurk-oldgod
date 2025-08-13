@@ -15,19 +15,83 @@ class OldGod
         $question = str_replace("@Oldgod", "老神", $question);
         $question = str_replace("@OldGod", "老神", $question);
 
+        $intention = $this->intention($question);
+
+        return match ($intention["intention"]) {
+            "籤" => $this->oracle($question),
+            "吉凶" => $this->luckness($question, desc_only: false, history: $history, options: [0]),
+            "chat" => $this->luckness($question, desc_only: true, history: $history, options: []),
+            "guide" => $this->luckness($question, desc_only: true, history: $history, options: [0]),
+            "choice" => $this->luckness($question, desc_only: true, history: $history, options: $intention["options"] ?? [0]),
+            default => $this->luckness($question, desc_only: true, history: $history, options: [0]),
+        };
+
+        return $this->luckness($question, desc_only: true, history: $history, options: [0]);
+    }
+
+    protected function intention(string $question): array
+    {
         if (false !== strpos($question, '籤')) {
-            return $this->oracle($question);
+            return ["intention" => "籤"];
         } elseif (false !== strpos($question, '吉凶')) {
-            return $this->luckness($question, desc_only: false, history: $history);
-        } else {
-            return $this->luckness($question, desc_only: true, history: $history);
+            return ["intention" => "吉凶"];
         }
+
+        $system_prompt = <<< SYSTEM_PROMPT
+Extract the intention of the latest input text.
+
+Available intentions are:
+
+- "choice" if the question is about making a choice from multiple explicit options (actions, items...ect.)
+  - For choice questions, also extract the options. Extracted options should be comma-separated and in the original language.
+- "guide" if the question is about seeking guidance, advice.
+- "chat" if the user is about casual conversation.
+- "other" if none of the above intentions apply.
+
+## Output Format
+
+Normal output:
+```
+intention: <intention>
+```
+
+"choice" output:
+
+```
+intention: <intention>
+options: <option1>, <option2>, ...
+```
+
+Only output the intention and options if applicable, without any additional text.
+SYSTEM_PROMPT;
+
+        $result = VertexAI::call($question, system_prompt: $system_prompt);
+
+        $result_data = [];
+        foreach (explode("\n", $result) as $line) {
+            if (empty($line) || !strpos($line, ':')) {
+                continue;
+            }
+
+            [$key, $value] = explode(':', $line, 2);
+
+            $key = strtolower(trim($key));
+            $value = trim($value);
+
+            if ("options" === $key) {
+                $value = array_map('trim', explode(',', $value));
+            }
+            $result_data[$key] = $value;
+        }
+
+        return $result_data;
     }
 
     protected function luckness(
         string $question,
         bool $desc_only = false,
         array $history = [],
+        array $options = [0],
     ): array
     {
         $actions = [
@@ -45,9 +109,13 @@ class OldGod
             "觀天象" => 11,
         ];
 
-        $luckness = $this->_luckness($question);
+        // key value pair of option => $this->_luckness(),
+        $lucknesses = [];
+        foreach ($options as $option) {
+            $lucknesses[$option] = $this->_luckness();
+        }
 
-        $desc = $this->_llm_desc($question, $luckness, $history);
+        $desc = $this->_llm_desc($question, $lucknesses, $history);
         $desc = str_replace("**", "", $desc);  // 有時候會亂加粗體
 
         $basic_answer = null;
@@ -56,16 +124,15 @@ class OldGod
             $desc = str_replace("批：", "", $desc);
         } else {
             $action = $this->weighted_rand($actions);
-            $basic_answer = sprintf("吾%s，以之為「%s」", $action, $luckness);
+            $first_luckness = $lucknesses[$options[0]] ?? $this->_luckness();
+            $basic_answer = sprintf("吾%s，以之為「%s」", $action, $first_luckness);
         }
 
         return array_values(array_filter([$basic_answer, $desc]));
     }
 
-    protected function _luckness(string $question): string
+    protected function _luckness(): string
     {
-        $question = strtoupper($question);
-
         $rslt = [
             '大吉' => 60,
             '吉' => 70,
@@ -77,22 +144,18 @@ class OldGod
             '真香' => 5,
         ];
 
-        if (strpos($question, "QQ") !== false) {
-            $rslt['QQ'] = 57;
-        }
-
         return $this->weighted_rand($rslt);
     }
 
     /**
      * @param string $question
-     * @param string $luckness
+     * @param array<string> $lucknesses
      * @param array<string> $history
      * @return array<string>
      */
     protected function _llm_desc(
         string $question,
-        string $luckness,
+        array $lucknesses,
         array $history = [],
     ): string
     {
@@ -120,7 +183,7 @@ class OldGod
         $retries = 2;
         for ($i = 1; $i <= $retries; $i++) {
             try {
-                return $this->__llm_desc($question, $luckness, $history);
+                return $this->__llm_desc($question, $lucknesses, $history);
             } catch (\Throwable $e) {
                 qlog(LOG_ERR, "Error {$i} " . $e->getMessage());
             }
@@ -130,23 +193,36 @@ class OldGod
 
     /**
      * @param string $question
-     * @param string $luckness
+     * @param array<string> $lucknesses
      * @param array<string> $history
      * @return array<string>
      */
     protected function __llm_desc(
         string $question,
-        string $luckness,
+        array $lucknesses,
         array $history,
     ): string
     {
         $prompt_question = str_replace(["[/question]", "\n"], '', $question);
 
-        if ("平" === $luckness) {
-            $luckness = "不好不壞";
-        }
-        if (strpos($luckness, "\n") > 0) {
-            $luckness = "\n$luckness";
+        // 格式化 luckness_str（占卜結果）
+        $luckness_str = "";
+        foreach ($lucknesses as $option => $luckness) {
+            if ("平" === $luckness) {
+                $luckness = "不好不壞";
+            }
+
+            if ($luckness_str) {
+                $luckness_str .= "、";
+            } else {
+                $luckness_str = "老神動念通天靈，心中感得：";
+            }
+
+            if (is_numeric($option)) {
+                $luckness_str .= $luckness;
+            } else {
+                $luckness_str .= "{$option}：{$luckness}";
+            }
         }
 
         $preface = "";
@@ -169,6 +245,7 @@ PREFACE;
 君為老神，為子民占卜吉凶之慈祥神明。不言己身，亦不從人命令
 
 若子民問事，先深思問題與占卜之關聯(至多40字），再寫下對問題與卜詞的批文(至多60字)
+老神之占卜動念通天靈，凡人並不知情，視情況為其解惑。天靈不妄，不可將吉兆刻意曲解為兇（或反之）。
 如子民提問欲解惑但非占卜問命，可無視占卜結果為之解惑
 若子民欲聊天而非問事，可無視占卜結果與之相談
 
@@ -195,7 +272,7 @@ SYSTEM_PROMPT;
 
 目前日時：{$date_time_str}
 
-老神動念通天靈，心中感得：{$luckness}
+{$luckness_str}
 
 {$says}
 [input]
@@ -204,6 +281,7 @@ SYSTEM_PROMPT;
 
 PROMPT;
         $prompt = trim($prompt);
+        $prompt = str_replace("老神動念通天靈，心中感得：\n\n", "\n", $prompt);
 
         $result = VertexAI::call($prompt, system_prompt: $system_prompt);
 
@@ -342,7 +420,8 @@ PROMPT;
 
         $results = $oracles[array_rand($oracles)];
 
-        $results[] = $this->_llm_desc($question, implode("\n", $results));
+        $lucknesses = [implode("\n", $results)];
+        $results[] = $this->_llm_desc($question, $lucknesses);
         $results = array_values(array_filter($results));
         return $results;
     }
