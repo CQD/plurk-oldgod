@@ -8,7 +8,7 @@ class VertexAI
 {
     public static function call(
         string|array $contents = "",
-        string $model = "gemini-2.0-flash-exp",
+        string $model = "gemini-2.5-flash-lite",
         string|null $system_prompt = null,
         array $configs = [],
         int $maxOutputTokens = 300,
