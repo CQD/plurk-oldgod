@@ -98,7 +98,7 @@ class OldGodTest extends TestCase
             }
 
             // 抽牌不重複
-            preg_match_all('/：(.+?)（[正逆]位）/', $spreadText, $matches);
+            preg_match_all('/：(.+?)（[正逆]位）/u', $spreadText, $matches);
             $this->assertSame($posCount, count($matches[1]), "牌陣 {$spreadId} 應有 {$posCount} 張牌");
             $this->assertSame(count($matches[1]), count(array_unique($matches[1])), "牌陣 {$spreadId} 不應有重複牌");
 
@@ -124,7 +124,7 @@ class OldGodTest extends TestCase
         for ($i = 0; $i < 300; $i++) {
             [$spreadText, $llmText] = $oldGod->_tarot_draw('three_card', 'major');
 
-            preg_match_all('/：(.+?)（[正逆]位）/', $spreadText, $matches);
+            preg_match_all('/：(.+?)（[正逆]位）/u', $spreadText, $matches);
             foreach ($matches[1] as $cardName) {
                 $this->assertContains($cardName, $majorNames, "{$cardName} 不是大阿爾克那");
             }
@@ -141,7 +141,7 @@ class OldGodTest extends TestCase
 
         $this->assertStringContainsString('【三牌陣】', $spreadText);
 
-        preg_match_all('/：(.+?)（[正逆]位）/', $spreadText, $matches);
+        preg_match_all('/：(.+?)（[正逆]位）/u', $spreadText, $matches);
         $this->assertSame(3, count($matches[1]));
     }
 
