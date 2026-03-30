@@ -20,6 +20,7 @@ class OldGod
 
         return match ($intention["intention"]) {
             "籤" => $this->oracle($question),
+            "tarot" => $this->tarot($question, $intention['spread'] ?? 'three_card', $intention['deck'] ?? 'full', $history),
             "吉凶" => $this->luckness($question, desc_only: false, history: $history, options: [0]),
             "chat" => $this->luckness($question, desc_only: true, history: $history, options: []),
             "guide" => $this->luckness($question, desc_only: true, history: $history, options: [0]),
@@ -43,6 +44,10 @@ Extract the intention of the latest input text.
 
 Available intentions are:
 
+- "tarot" if the user explicitly wants a tarot card reading.
+  - For tarot, also extract which spread and deck to use.
+  - spread: "single" (simple question), "three_card" (past/present/future), "celtic_cross" (comprehensive), "choice" (choosing between options), "relationship" (relationship questions). Default: "three_card"
+  - deck: "full" (all 78 cards) or "major" (22 major arcana only). Default: "full"
 - "choice" if the question is about making a choice from multiple explicit options (actions, items...ect.)
   - For choice questions, also extract the options. Extracted options should be comma-separated and in the original language.
 - "guide" if the question is about seeking guidance, advice.
@@ -59,11 +64,19 @@ intention: <intention>
 "choice" output:
 
 ```
-intention: <intention>
+intention: choice
 options: <option1>, <option2>, ...
 ```
 
-Only output the intention and options if applicable, without any additional text.
+"tarot" output:
+
+```
+intention: tarot
+spread: <spread>
+deck: <deck>
+```
+
+Only output the intention and options/spread/deck if applicable, without any additional text.
 SYSTEM_PROMPT;
 
         $result = VertexAI::call($question, system_prompt: $system_prompt);
@@ -83,6 +96,16 @@ SYSTEM_PROMPT;
                 $value = array_map('trim', explode(',', $value));
             }
             $result_data[$key] = $value;
+        }
+
+        // tarot fallback 防禦
+        if (($result_data['intention'] ?? '') === 'tarot') {
+            if (!isset(TarotData::$spreads[$result_data['spread'] ?? ''])) {
+                $result_data['spread'] = 'three_card';
+            }
+            if (!in_array($result_data['deck'] ?? '', ['full', 'major'], true)) {
+                $result_data['deck'] = 'full';
+            }
         }
 
         return $result_data;
