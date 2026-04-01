@@ -144,6 +144,10 @@ hr{
 「老神我想打籃球，請賜籤」<br>
 「老神 求籤 明天的天氣」<br>
 「老神 抽籤問腳踏兩條船的運勢」<br>
+<br>
+塔羅占卜：<br>
+「老神 幫我用塔羅占一下感情運」<br>
+「老神 塔羅占卜 該不該換工作」<br>
 </section>
 <section id="about">
 這是<a href="https://www.plurk.com">噗浪</a>上的<a href="https://www.plurk.com/OldGod">老神機器人</a>的網頁版，程式碼放在 <a href="https://github.com/CQD/plurk-oldgod">Github</a> 上。<br>
