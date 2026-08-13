@@ -4,6 +4,14 @@ include __DIR__ . '/../vendor/autoload.php';
 
 define('NO_QLOG', true);
 
+// CLI 環境沒有 getallheaders()，補一個空實作讓 canRunCron() 可運作
+if (!function_exists('getallheaders')) {
+    function getallheaders()
+    {
+        return [];
+    }
+}
+
 class DummyQlurk
 {
     public $history = [];

@@ -20,16 +20,18 @@ class OldGodTest extends TestCase
         for ($i = 0; $i < 300; $i++) {
             $rslt = $oldGod->ask($question);
 
+            // 吉凶回覆兩則：吉凶結果 + 批文（測試環境 LLM 不可用，批文為 fallback 罐頭文）
             $this->assertIsArray($rslt);
-            $this->assertSame(1, count($rslt));
+            $this->assertSame(2, count($rslt));
             $this->assertRegExp('/吾..+，以之為「[^」]*[吉兇平嘿香][^」]*」/', $rslt[0]);
+            $this->assertRegExp('/^批：/', $rslt[1]);
         }
     }
 
     public function lucknessProvider()
     {
         return [
-            ['問吉兇'],
+            ['問吉凶'],
             ['老神 幫我找妹子好嗎 吉凶'],
             ['老神 吉凶 我該怎麼辦？'],
         ];
@@ -46,10 +48,12 @@ class OldGodTest extends TestCase
         for ($i = 0; $i < 300; $i++) {
             $rslt = $oldGod->ask($question);
 
+            // 求籤回覆三則：籤詩 + 籤解 + 批文（測試環境 LLM 不可用，批文為 fallback 罐頭文）
             $this->assertIsArray($rslt);
-            $this->assertSame(2, count($rslt));
+            $this->assertSame(3, count($rslt));
             $this->assertRegExp('/^第[一二三四五六七八九十百]+籤，.*/', $rslt[0]);
             $this->assertRegExp('/。/', $rslt[1]);
+            $this->assertRegExp('/^批：/', $rslt[2]);
         }
     }
 
