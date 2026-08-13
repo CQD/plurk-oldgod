@@ -44,7 +44,7 @@ Extract the intention of the latest input text.
 
 Available intentions are:
 
-- "tarot" if the user is requesting a tarot card reading / divination. Questions about tarot capabilities, supported spreads, or how tarot works should be classified as "chat", not "tarot".
+- "tarot" ONLY if the user explicitly mentions tarot (e.g. "塔羅", "tarot", or a specific tarot spread/card). Generic divination or fortune-telling requests that do not mention tarot (e.g. "占卜運勢", "算感情運", "算命") must NOT be classified as "tarot"; classify them as "guide", "chat", or "other" instead. Questions about tarot capabilities, supported spreads, or how tarot works should be classified as "chat", not "tarot".
   - For tarot, also extract which spread and deck to use.
   - spread: "single" (simple question), "three_card" (past/present/future), "celtic_cross" (comprehensive), "choice" (choosing between options), "relationship" (relationship questions). Default: "three_card"
   - deck: "full" (all 78 cards) or "major" (22 major arcana only). Default: "full"
