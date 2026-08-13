@@ -8,7 +8,7 @@ class VertexAI
 {
     public static function call(
         string|array $contents = "",
-        string $model = "gemini-2.5-flash-lite",
+        string $model = "gemma-4-26b-a4b-it",
         string|null $system_prompt = null,
         array $configs = [],
         int $maxOutputTokens = 300,
@@ -29,6 +29,8 @@ class VertexAI
         $configs = $configs + [
             "maxOutputTokens" => $maxOutputTokens,
             "temperature" => 2,
+            // gemma-4 是 thinking model，關閉思考以免延遲過長、思考吃光 output tokens
+            "thinkingConfig" => ["thinkingLevel" => "minimal"],
         ];
 
         $payload = [
@@ -111,6 +113,10 @@ class VertexAI
             }
 
             foreach ($candidate["content"]["parts"] as $part) {
+                // thinking model 的思考過程不可漏進回覆
+                if ($part["thought"] ?? false) {
+                    continue;
+                }
                 $result_text .= $part["text"];
             }
         }
